@@ -1,0 +1,1896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevBand | Developer Collaboration Platform</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --error: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --sidebar-width: 320px;
+        }
+
+        body.dark-mode {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); color: var(--text-main); line-height: 1.6; overflow-x: hidden; transition: background-color 0.3s, color 0.3s; }
+
+        .hidden { display: none !important; }
+        
+        .btn { cursor: pointer; padding: 10px 18px; border-radius: 8px; border: none; font-weight: 600; font-size: 0.9rem; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary { background: var(--primary); color: white; width: 100%; }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); }
+        .btn-secondary { background: var(--border); color: var(--text-main); }
+        .btn-secondary:hover { background: var(--text-muted); color: white; }
+        .btn-danger { background: var(--error); color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        input, textarea, select { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; outline: none; transition: 0.2s; background: var(--card-bg); color: var(--text-main); font-size: 0.9rem; margin-top: 4px; }
+        input:focus, textarea:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+        label { font-size: 0.85rem; font-weight: 500; color: var(--text-muted); display: block; margin-top: 12px; }
+
+        nav { background: var(--card-bg); padding: 0.8rem 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 1.3rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .hamburger { font-size: 1.2rem; cursor: pointer; color: var(--text-muted); padding: 6px; border-radius: 6px; }
+        .hamburger:hover { background: var(--border); }
+
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); opacity: 0; visibility: hidden; transition: 0.3s; z-index: 999; backdrop-filter: blur(2px); }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+        .sidebar { position: fixed; left: calc(-1 * var(--sidebar-width)); top: 0; width: var(--sidebar-width); height: 100%; background: var(--card-bg); box-shadow: 5px 0 25px rgba(0,0,0,0.15); z-index: 1000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 25px 20px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+        .sidebar.active { left: 0; }
+        .sidebar-menu-btn { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; color: var(--text-main); transition: 0.2s; }
+        .sidebar-menu-btn:hover { background: var(--border); }
+
+        .auth-container { max-width: 400px; margin: 60px auto; padding: 32px; background: var(--card-bg); border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+
+        .drawer { position: fixed; right: -450px; top: 0; width: 420px; max-width: 100vw; height: 100%; background: var(--card-bg); box-shadow: -5px 0 25px rgba(0,0,0,0.15); z-index: 1050; transition: 0.3s ease; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
+        .drawer.active { right: 0; }
+        .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        .close-drawer { cursor: pointer; font-size: 1.3rem; color: var(--text-muted); }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); padding: 20px; }
+        .modal-content { background: var(--card-bg); padding: 30px; border-radius: 16px; max-width: 500px; width: 100%; max-height: 85vh; overflow-y: auto; border: 1px solid var(--border); box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+
+        .dashboard { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+        .card { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
+
+        #toast-container { position: fixed; bottom: 30px; right: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: var(--card-bg); color: var(--text-main); padding: 14px 20px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; min-width: 280px; border-left: 4px solid var(--primary); border: 1px solid var(--border); animation: slideIn 0.3s ease; }
+        .toast.error { border-left-color: var(--error); }
+        .toast.success { border-left-color: var(--success); }
+
+        .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #cbd5e1; display: inline-block; }
+        .avatar-lg { width: 80px; height: 80px; }
+        .avatar-sm { width: 28px; height: 28px; }
+        
+        .badge-premium { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; vertical-align: middle; }
+        .badge-creator { background: var(--primary); color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; }
+        .badge-admin { background: #8b5cf6; color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; }
+
+        .chat-box { height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); margin-bottom: 10px; }
+        .chat-msg { display: flex; gap: 10px; max-width: 80%; }
+        .chat-msg.self { align-self: flex-end; flex-direction: row-reverse; }
+        .chat-bubble { background: var(--card-bg); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border); font-size: 0.9rem; }
+        .chat-msg.self .chat-bubble { background: var(--primary); color: white; border: none; }
+
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .fade-in { animation: fadeIn 0.3s ease; }
+    </style>
+</head>
+<body>
+
+    <div id="toast-container"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <i class="fas fa-bars hamburger" onclick="toggleSidebar()"></i>
+            <div class="logo"><i class="fas fa-code-branch"></i> DevBand</div>
+        </div>
+        <div id="nav-user-info" class="hidden" style="display: flex; align-items: center; gap: 10px;">
+            <img id="nav-avatar" class="avatar avatar-sm" src="https://via.placeholder.com/150" alt="Profile">
+            <span id="nav-display-name" style="font-weight: 600; font-size: 0.9rem;"></span>
+        </div>
+    </nav>
+
+    <!-- Sidebar Overlay & Menu -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+            <h3 style="color: var(--primary);"><i class="fas fa-layer-group"></i> Workspaces</h3>
+            <i class="fas fa-times close-drawer" onclick="toggleSidebar()"></i>
+        </div>
+
+        <button class="btn btn-primary" onclick="openDrawer('create-workspace-drawer'); toggleSidebar();"><i class="fas fa-plus"></i> <span class="lang-term" data-key="createWs">Create workspace</span></button>
+        <button class="btn btn-secondary" onclick="openDrawer('join-workspace-drawer'); toggleSidebar();"><i class="fas fa-sign-in-alt"></i> <span class="lang-term" data-key="joinWs">Join workspace</span></button>
+        
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 10px 0;">
+        
+        <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">My Workspaces</div>
+        <div id="my-workspaces-list" style="display: flex; flex-direction: column; gap: 5px; max-height: 200px; overflow-y: auto;">
+            <p style="font-size: 0.85rem; color: var(--text-muted);">No workspaces yet</p>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 10px 0;">
+
+        <div class="sidebar-menu-btn" onclick="openDrawer('friend-list-drawer'); toggleSidebar();"><i class="fas fa-user-friends"></i> Friend List</div>
+        <div class="sidebar-menu-btn" onclick="openDrawer('add-friend-drawer'); toggleSidebar();"><i class="fas fa-user-plus"></i> Add Friend</div>
+        <div class="sidebar-menu-btn" onclick="openDrawer('friend-requests-drawer'); toggleSidebar();"><i class="fas fa-envelope-open-text"></i> Friend Requests <span id="pending-requests-badge" style="background: var(--error); color: white; font-size: 0.75rem; padding: 2px 6px; border-radius: 10px; margin-left: auto;" class="hidden">0</span></div>
+
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 10px 0;">
+
+        <div class="sidebar-menu-btn" onclick="openDrawer('redeem-drawer'); toggleSidebar();"><i class="fas fa-gift"></i> Redeem Code</div>
+        <div class="sidebar-menu-btn" onclick="openDrawer('profile-drawer'); toggleSidebar();"><i class="fas fa-user-circle"></i> My Profile</div>
+        <div class="sidebar-menu-btn" onclick="openDrawer('settings-drawer'); toggleSidebar();"><i class="fas fa-cog"></i> Settings</div>
+        
+        <div style="margin-top: auto; padding-top: 15px;">
+            <button class="btn btn-danger" style="width: 100%;" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </div>
+
+    <!-- BAN SCREEN -->
+    <div id="ban-screen" class="modal-overlay hidden">
+        <div class="modal-content" style="text-align: center;">
+            <i class="fas fa-ban" style="font-size: 3rem; color: var(--error); margin-bottom: 15px;"></i>
+            <h2>Account Suspended</h2>
+            <p id="ban-reason-text" style="margin: 15px 0; color: var(--text-muted);"></p>
+            <p id="ban-timer-text" style="font-weight: 700; color: var(--error); font-size: 1.1rem; margin-bottom: 15px;"></p>
+            <div id="ban-evidence-container" style="margin-bottom: 20px;"></div>
+            <a href="https://fast-bot-official.github.io/FluxionarySupport//" target="_blank" class="btn btn-primary" style="text-decoration: none; display: inline-flex;"><i class="fas fa-external-link-alt"></i> Appeal Ban</a>
+        </div>
+    </div>
+
+    <!-- AUTH SECTION -->
+    <div id="auth-section" class="auth-container fade-in">
+        <h2 id="auth-title" style="text-align: center; margin-bottom: 20px;">Welcome Back</h2>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div>
+                <label>Email Address</label>
+                <input type="email" id="auth-email" placeholder="dev@example.com">
+            </div>
+            <div>
+                <label>Password</label>
+                <input type="password" id="auth-password" placeholder="••••••••">
+            </div>
+            
+            <button id="auth-main-btn" class="btn btn-primary" onclick="handleEmailAuth()" style="margin-top: 10px;">Sign In</button>
+            
+            <div id="forgot-pw-wrapper" style="text-align: center; margin: 5px 0;">
+                <a href="#" onclick="handleForgotPassword()" style="color: var(--text-muted); font-size: 0.85rem; text-decoration: none;">Forgot password?</a>
+            </div>
+
+            <button class="btn btn-secondary" onclick="handleGoogleAuth()" style="background: var(--card-bg); border: 1px solid var(--border);"><i class="fab fa-google" style="color: #ea4335;"></i> Continue with Google</button>
+            
+            <div style="text-align: center; margin-top: 15px; font-size: 0.9rem; color: var(--text-muted);">
+                <span id="auth-toggle-text">New to the app?</span>
+                <a href="#" id="auth-toggle-btn" onclick="toggleAuthMode()" style="color: var(--primary); font-weight: 600; text-decoration: none; margin-left: 5px;">Signup now</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- EMAIL VERIFICATION SCREEN -->
+    <div id="verify-section" class="auth-container hidden fade-in" style="text-align: center;">
+        <i class="fas fa-envelope-circle-check" style="font-size: 3.5rem; color: var(--primary); margin-bottom: 15px;"></i>
+        <h2>Verify Your Email</h2>
+        <p style="color: var(--text-muted); margin: 15px 0; font-size: 0.9rem;">
+            We have sent a verification link to your email address. Please click it to proceed.
+            <br><br>
+            <strong style="color: var(--error);">Important:</strong> If you cannot find the email in your inbox, please check your <strong>Spam</strong> folder and report "Not spam".
+        </p>
+        
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+            <button id="resend-verify-btn" class="btn btn-secondary" onclick="resendVerificationEmail()">Resend Verification Email</button>
+            <button class="btn btn-primary" onclick="checkEmailVerificationDone()">I have verified</button>
+            <button class="btn btn-danger" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- PRIVACY POLICY POPUP -->
+    <div id="privacy-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 15px;"><i class="fas fa-shield-alt" style="color: var(--primary);"></i> Privacy Policy</h2>
+            <div id="privacy-scroll-box" style="height: 200px; overflow-y: auto; border: 1px solid var(--border); padding: 15px; border-radius: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px; background: var(--bg);">
+                <p><strong>1. Information Collection:</strong> DevBand collects your email address, basic profile information (display name, bio, profile photo URL), workspace collaboration logs, shared code files, bug reports, and chat interactions to facilitate real-time project collaboration.</p>
+                <br>
+                <p><strong>2. Data Usage:</strong> Your data is used exclusively to maintain your profile, sync project communications, handle team member permissions, enforce ban status across systems, and store shared technical assets.</p>
+                <br>
+                <p><strong>3. Media Uploads:</strong> Files and photos uploaded are stored using external Cloudinary infrastructure and Firebase database reference points securely associated with your unique account identifier.</p>
+                <br>
+                <p><strong>4. Consent:</strong> By agreeing, you authorize DevBand to sync your user preferences and activity within assigned workspaces across connected client sessions.</p>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                <input type="checkbox" id="privacy-checkbox" disabled style="width: auto;">
+                <label for="privacy-checkbox" style="margin: 0; font-size: 0.85rem;">I agree to the privacy policy and I have read everything stated</label>
+            </div>
+
+            <button id="privacy-continue-btn" class="btn btn-primary" disabled onclick="acceptPrivacyPolicy()">Continue</button>
+        </div>
+    </div>
+
+    <!-- DRAWERS -->
+
+    <!-- Complete Profile Drawer (Non-closable modal style) -->
+    <div id="complete-profile-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2>Complete Your Profile</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Set up your developer identification before entering workspaces.</p>
+            
+            <div>
+                <label>Profile Picture (Optional, Max <span id="prof-limit-text">5</span>MB)</label>
+                <input type="file" id="init-avatar-file" accept="image/*">
+            </div>
+
+            <div>
+                <label>Display Name (3 to 10 characters)</label>
+                <input type="text" id="init-display-name" placeholder="DevCode" minlength="3" maxlength="10">
+            </div>
+
+            <div>
+                <label>Bio Description</label>
+                <textarea id="init-bio" rows="3" placeholder="Full-stack engineer building awesome apps..."></textarea>
+            </div>
+
+            <button class="btn btn-primary" style="margin-top: 20px;" onclick="saveInitialProfile()">Save Details</button>
+        </div>
+    </div>
+
+    <!-- Edit Profile Drawer -->
+    <div id="profile-drawer" class="drawer">
+        <div class="drawer-header">
+            <h3>My Profile</h3>
+            <i class="fas fa-times close-drawer" onclick="closeDrawer('profile-drawer')"></i>
+        </div>
+        
+        <div style="text-align: center; margin-bottom: 15px;">
+            <img id="drawer-avatar-img" class="avatar avatar-lg" src="https://via.placeholder.com/150" alt="Avatar">
+        </div>
+
+        <div>
+            <label>6-Digit Friend Code</label>
+            <input type="text" id="drawer-friend-code" readonly style="font-weight: 700; background: var(--bg); text-align: center; letter-spacing: 2px;">
+        </div>
+
+        <div>
+            <label>User UID</label>
+            <input type="text" id="drawer-uid" readonly style="font-size: 0.75rem; background: var(--bg); text-align: center;">
+        </div>
+
+        <div>
+            <label>Profile Picture (Optional)</label>
+            <input type="file" id="edit-avatar-file" accept="image/*">
+        </div>
+
+        <div>
+            <label>Display Name (3-10 chars)</label>
+            <input type="text" id="edit-display-name" minlength="3" maxlength="10">
+        </div>
+
+        <div>
+            <label>Bio Description</label>
+            <textarea id="edit-bio" rows="3"></textarea>
+        </div>
+
+        <button class="btn btn-primary" style="margin-top: 15px;" onclick="saveEditedProfile()">Save Details</button>
+
+        <div id="premium-timer-container" style="margin-top: 30px; padding: 15px; background: var(--bg); border-radius: 8px; border: 1px dashed var(--warning); text-align: center;" class="hidden">
+            <span class="badge-premium">PREMIUM ACTIVE</span>
+            <p style="font-size: 0.85rem; margin-top: 5px;">Time left on Premium:</p>
+            <strong id="premium-timer-text" style="color: var(--warning); font-size: 1rem;">--</strong>
+        </div>
+    </div>
+
+    <!-- Settings Drawer -->
+    <div id="settings-drawer" class="drawer">
+        <div class="drawer-header">
+            <i class="fas fa-times close-drawer" onclick="closeDrawer('settings-drawer')"></i>
+            <h3>Settings</h3>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 20px; margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Dark Mode</span>
+                <input type="checkbox" id="setting-darkmode" style="width: auto;">
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div>Use Technical Language</div>
+                    <small style="color: var(--text-muted);">App uses developer terms everywhere</small>
+                </div>
+                <input type="checkbox" id="setting-techlang" style="width: auto;">
+            </div>
+
+            <button class="btn btn-primary" style="margin-top: 20px;" onclick="saveSettings()">Save Preferences</button>
+        </div>
+    </div>
+
+    <!-- Create Workspace Drawer -->
+    <div id="create-workspace-drawer" class="drawer">
+        <div class="drawer-header">
+            <h3><span class="lang-term" data-key="createWs">Create workspace</span></h3>
+            <i class="fas fa-times close-drawer" onclick="closeDrawer('create-workspace-drawer')"></i>
+        </div>
+
+        <div>
+            <label>Workspace Name</label>
+            <input type="text" id="ws-create-name" placeholder="Alpha Project">
+        </div>
+
+        <div>
+            <label>Workspace Icon (Optional, Max 8MB)</label>
+            <input type="file" id="ws-create-icon" accept="image/*">
+        </div>
+
+        <button class="btn btn-primary" style="margin-top: 20px;" onclick="createWorkspace()"><span class="lang-term" data-key="createWs">Create workspace</span></button>
+    </div>
+
+    <!-- Join Workspace Drawer -->
+    <div id="join-workspace-drawer" class="drawer">
+        <div class="drawer-header">
+            <h3><span class="lang-term" data-key="joinWs">Join workspace</span></h3>
+            <i class="fas fa-times close-drawer" onclick="closeDrawer('join-workspace-drawer')"></i>
+        </div>
+
+        <div>
+            <label>8-Digit Workspace PIN</label>
+            <input type="text" id="ws-join-pin" placeholder="12345678" maxlength="8">
+        </div>
+
+        <button class="btn btn-primary" style="margin-top: 20px;" onclick="joinWorkspace()"><span class="lang-term" data-key="joinWs">Join workspace</span></button>
+    </div>
+
+    <!-- Add Friend Drawer -->
+    <div id="add-friend-drawer" class="drawer">
+        <div class="drawer-header">
+            <h3>Add Friend</h3>
+            <i class="fas fa-times close-drawer" onclick="closeDrawer('add-friend-drawer')"></i>
+        </div>
+
+        <div>
+            <label>Friend Code (6 digits) or UID</label>
+            <input type="text" id="friend-target-id" placeholder="Enter Code or UID">
+        </div>
+
+        <button class="btn btn-primary" style="margin-top: 20px;" onclick="sendFriendRequest()">Send Request</button>
+    </div>
+
+    <!-- Friend Requests Drawer -->
+    <div id="friend-requests-drawer" class="drawer">
+        <div class="drawer-header">
+            <h3>Friend Requests</h3>
+            <i class="fas fa-times close-drawer" onclick="closeDrawer('friend-requests-drawer')"></i>
+        </div>
+
+        <div style="margin-bottom: 15px; font-weight: 600; font-size: 0.9rem;">
+            Pending Requests: <span id="drawer-pending-count">0</span>
+        </div>
+
+        <div id="friend-requests-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+    </div>
+
+    <!-- Friend List Drawer -->
+    <div id="friend-list-drawer" class="drawer">
+        <div class="drawer-header">
+            <h3>Friend List</h3>
+            <i class="fas fa-times close-drawer" onclick="closeDrawer('friend-list-drawer')"></i>
+        </div>
+
+        <div id="friends-container-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+    </div>
+
+    <!-- Redeem Code Drawer -->
+    <div id="redeem-drawer" class="drawer">
+        <div class="drawer-header">
+            <h3>Redeem Premium Code</h3>
+            <i class="fas fa-times close-drawer" onclick="closeDrawer('redeem-drawer')"></i>
+        </div>
+
+        <div>
+            <label>Enter Code</label>
+            <input type="text" id="redeem-code-input" placeholder="DEV-PREMIUM-XXXX">
+        </div>
+
+        <button class="btn btn-primary" style="margin-top: 20px;" onclick="redeemCode()">Apply Code</button>
+    </div>
+
+    <!-- DIRECT MESSAGES / FRIEND CHAT MODAL -->
+    <div id="dm-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 600px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 id="dm-target-name">Direct Chat</h3>
+                <i class="fas fa-times close-drawer" onclick="document.getElementById('dm-modal').classList.add('hidden')"></i>
+            </div>
+
+            <div id="dm-chat-box" class="chat-box"></div>
+
+            <div style="display: flex; gap: 8px; margin-top: 10px;">
+                <input type="text" id="dm-input" placeholder="Type message...">
+                <button class="btn btn-secondary" onclick="recordVoiceNote('dm')"><i class="fas fa-microphone"></i></button>
+                <button class="btn btn-primary" onclick="sendDirectMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REPORT FRIEND MODAL -->
+    <div id="report-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3>Report User</h3>
+            
+            <label>Category</label>
+            <select id="report-category">
+                <option value="bullying">Bullying or Harassment</option>
+                <option value="spam">Spam / Malware</option>
+                <option value="inappropriate">Inappropriate Behavior</option>
+            </select>
+
+            <label>Description</label>
+            <textarea id="report-desc" rows="3" placeholder="Provide details..."></textarea>
+
+            <label>Evidence Image (Optional)</label>
+            <input type="file" id="report-evidence-file" accept="image/*">
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="document.getElementById('report-modal').classList.add('hidden')">Cancel</button>
+                <button class="btn btn-danger" onclick="submitFriendReport()">Submit Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD AREA -->
+    <div id="app-dashboard" class="dashboard hidden">
+        
+        <!-- EMPTY WORKSPACE VIEW -->
+        <div id="empty-workspace-view" class="card" style="text-align: center; padding: 60px 20px;">
+            <i class="fas fa-folder-open" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 15px;"></i>
+            <h2>No workspaces selected</h2>
+            <p style="color: var(--text-muted); max-width: 450px; margin: 10px auto;">
+                Select a workspace from the sidebar or click the menu button to create/join a workspace to collaborate with your dev team.
+            </p>
+        </div>
+
+        <!-- ACTIVE WORKSPACE VIEW -->
+        <div id="active-workspace-view" class="hidden">
+            
+            <!-- Workspace Header -->
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <img id="ws-display-icon" class="avatar avatar-lg" src="https://via.placeholder.com/150" alt="Icon">
+                    <div>
+                        <h2 id="ws-display-name">Workspace</h2>
+                        <div style="font-size: 0.9rem; color: var(--text-muted);">
+                            PIN: <strong id="ws-display-pin" style="color: var(--primary); letter-spacing: 1px;">--------</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <button class="btn btn-secondary" onclick="showInviteQR()"><i class="fas fa-qrcode"></i> QR</button>
+                    <button class="btn btn-secondary" onclick="copyInviteLink()"><i class="fas fa-link"></i> Link</button>
+                    <button id="ws-config-btn" class="btn btn-secondary hidden" onclick="toggleWorkspaceConfig()"><i class="fas fa-sliders-h"></i> Configure</button>
+                </div>
+            </div>
+
+            <!-- Workspace Config Section (Admin/Creator only) -->
+            <div id="ws-config-section" class="card hidden fade-in" style="border-left: 4px solid var(--primary);">
+                <h3>Configure Workspace</h3>
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+                    <div>
+                        <label>Workspace Name</label>
+                        <input type="text" id="cfg-ws-name">
+                    </div>
+                    <div>
+                        <label>Change Icon</label>
+                        <input type="file" id="cfg-ws-icon" accept="image/*">
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+                        <input type="checkbox" id="cfg-ws-approval" style="width: auto;">
+                        <label for="cfg-ws-approval" style="margin: 0;">Require Admin/Creator Approval to Join</label>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="btn btn-primary" style="width: auto;" onclick="saveWorkspaceConfig()">Save Changes</button>
+                        <button id="ws-delete-btn" class="btn btn-danger hidden" style="width: auto;" onclick="deleteWorkspacePermanently()">Delete Workspace Permanently</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Join Requests Section (Only when approval enabled) -->
+            <div id="ws-join-requests-section" class="card hidden">
+                <h3>Request for joining workspace</h3>
+                <div id="ws-requests-list" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;"></div>
+            </div>
+
+            <!-- Collaborative Tasks -->
+            <div class="card">
+                <h3>Realtime Syncing Collaborative Tasks</h3>
+                <div style="display: flex; gap: 10px; margin: 15px 0;">
+                    <input type="text" id="task-input" placeholder="Add a new team task...">
+                    <input type="date" id="task-deadline" style="width: auto;">
+                    <button class="btn btn-primary" style="width: auto;" onclick="addWorkspaceTask()"><i class="fas fa-plus"></i></button>
+                </div>
+                <div id="tasks-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
+
+            <!-- Member Directory -->
+            <div class="card">
+                <h3>Member Directory (<span id="ws-member-count">0</span>/100)</h3>
+                <input type="text" id="member-search-input" placeholder="Search members by display name or UID..." oninput="filterMembers()">
+                <div id="member-directory-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-top: 15px;"></div>
+            </div>
+
+            <!-- Project Shares -->
+            <div class="card">
+                <h3>Project Shares</h3>
+                <div style="margin: 15px 0;">
+                    <label>Add project to share with team (Max 100MB per file)</label>
+                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                        <input type="file" id="project-share-file">
+                        <button class="btn btn-primary" style="width: auto;" onclick="uploadProjectFile()">Share</button>
+                    </div>
+                </div>
+                <div id="project-shares-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            </div>
+
+            <!-- Activity Logs -->
+            <div class="card">
+                <h3>Activity Logs</h3>
+                <div id="activity-logs-list" style="max-height: 200px; overflow-y: auto; font-size: 0.85rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px; margin-top: 10px;"></div>
+            </div>
+
+            <!-- Bug Logs -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3>Bug Logs</h3>
+                    <button class="btn btn-primary" style="width: auto;" onclick="toggleBugReportForm()">Create bug report</button>
+                </div>
+
+                <div id="bug-report-form" class="hidden" style="margin-bottom: 20px; padding: 15px; border: 1px solid var(--border); border-radius: 8px;">
+                    <input type="text" id="bug-title" placeholder="Bug Title">
+                    <textarea id="bug-desc" rows="3" placeholder="Bug Description..." style="margin-top: 8px;"></textarea>
+                    <label>Evidence File (Max 10MB)</label>
+                    <input type="file" id="bug-evidence-file">
+                    <button class="btn btn-primary" style="margin-top: 12px;" onclick="submitBugReport()">Submit Bug</button>
+                </div>
+
+                <div id="bug-logs-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            </div>
+
+            <!-- Team Communications -->
+            <div class="card">
+                <h3>Team Communications</h3>
+                
+                <div id="team-chat-box" class="chat-box" style="height: 400px; margin-top: 15px;"></div>
+
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="text" id="chat-input" placeholder="Type message (@ to mention member)..." oninput="handleChatMention(this)">
+                        
+                        <label for="chat-file-input" style="margin:0; cursor:pointer;" class="btn btn-secondary"><i class="fas fa-paperclip"></i></label>
+                        <input type="file" id="chat-file-input" class="hidden" onchange="uploadChatAttachment(this)">
+                        
+                        <button class="btn btn-secondary" onclick="captureCameraMedia()"><i class="fas fa-camera"></i></button>
+                        <button class="btn btn-secondary" onclick="recordVoiceNote('team')"><i class="fas fa-microphone"></i></button>
+                        <button class="btn btn-primary" onclick="sendTeamMessage()"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                    <div id="mention-dropdown" class="card hidden" style="position: absolute; max-height: 150px; overflow-y: auto; padding: 5px; z-index: 10;"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- QR CODE MODAL -->
+    <div id="qr-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="text-align: center;">
+            <h3>Workspace Invite QR</h3>
+            <div id="qrcode" style="margin: 20px auto; display: flex; justify-content: center;"></div>
+            <button class="btn btn-secondary" onclick="document.getElementById('qr-modal').classList.add('hidden')">Close</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { 
+            getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, 
+            onAuthStateChanged, sendEmailVerification, sendPasswordResetEmail,
+            GoogleAuthProvider, signInWithPopup 
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { 
+            getDatabase, ref, set, get, update, remove, push, onValue, query, orderByChild, equalTo 
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // Configs
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlnHBmvU5djObYI2pOX99mP8c8ammJNNE",
+            authDomain: "devbandteam.firebaseapp.com",
+            databaseURL: "https://devbandteam-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "devbandteam",
+            storageBucket: "devbandteam.firebasestorage.app",
+            messagingSenderId: "731432573570",
+            appId: "1:731432573570:web:ad1ec27192e9eacaecb29b"
+        };
+
+        const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dgdaqwfib/auto/upload";
+        const CLOUDINARY_PRESET = "ml_default";
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        // State Variables
+        let currentUser = null;
+        let userData = null;
+        let isSignUpMode = false;
+        let resendCooldown = 0;
+        let resendTimer = null;
+        let activeWorkspaceId = null;
+        let activeWorkspaceData = null;
+        let activeDMTargetUid = null;
+
+        // UI Toast Utility
+        window.showToast = (msg, type = 'info') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<i class="fas fa-info-circle"></i> <span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        };
+
+        // UI Drawer Utils
+        window.toggleSidebar = () => {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        };
+
+        window.openDrawer = (id) => {
+            document.querySelectorAll('.drawer').forEach(d => d.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        };
+
+        window.closeDrawer = (id) => {
+            document.getElementById(id).classList.remove('active');
+        };
+
+        // Cloudinary Unsigned Upload
+        async function uploadFileToCloudinary(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', CLOUDINARY_PRESET);
+            
+            const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
+            if (!res.ok) throw new Error("Upload failed");
+            const data = await res.json();
+            return data.secure_url;
+        }
+
+        // Generate Unique Codes
+        async function generateUniqueFriendCode() {
+            let code = "";
+            let exists = true;
+            while (exists) {
+                code = Math.floor(100000 + Math.random() * 900000).toString();
+                const snapshot = await get(query(ref(db, 'users'), orderByChild('friendCode'), equalTo(code)));
+                exists = snapshot.exists();
+            }
+            return code;
+        }
+
+        async function generateUniqueWorkspacePin() {
+            let pin = "";
+            let exists = true;
+            while (exists) {
+                pin = Math.floor(10000000 + Math.random() * 90000000).toString();
+                const snapshot = await get(query(ref(db, 'workspaces'), orderByChild('pin'), equalTo(pin)));
+                exists = snapshot.exists();
+            }
+            return pin;
+        }
+
+        // --- AUTHENTICATION FLOW ---
+        window.toggleAuthMode = () => {
+            isSignUpMode = !isSignUpMode;
+            document.getElementById('auth-title').innerText = isSignUpMode ? "Create account" : "Welcome Back";
+            document.getElementById('auth-main-btn').innerText = isSignUpMode ? "Sign Up" : "Sign In";
+            document.getElementById('auth-toggle-text').innerText = isSignUpMode ? "Already have an account?" : "New to the app?";
+            document.getElementById('auth-toggle-btn').innerText = isSignUpMode ? "Login instead." : "Signup now";
+            document.getElementById('forgot-pw-wrapper').classList.toggle('hidden', isSignUpMode);
+        };
+
+        window.handleEmailAuth = async () => {
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value.trim();
+
+            if (!email || !password) return showToast("Please fill email and password", "error");
+
+            try {
+                if (isSignUpMode) {
+                    const cred = await createUserWithEmailAndPassword(auth, email, password);
+                    await sendEmailVerification(cred.user);
+                    showToast("Account created! Verification email sent.", "success");
+                } else {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    showToast("Logged in successfully", "success");
+                }
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        };
+
+        window.handleGoogleAuth = async () => {
+            try {
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(auth, provider);
+                showToast("Signed in with Google", "success");
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        };
+
+        window.handleForgotPassword = async () => {
+            const email = document.getElementById('auth-email').value.trim();
+            if (!email) return showToast("Enter email address to reset password", "error");
+            try {
+                await sendPasswordResetEmail(auth, email);
+                showToast("Password reset email sent!", "success");
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        };
+
+        window.resendVerificationEmail = async () => {
+            if (resendCooldown > 0) return;
+            try {
+                await sendEmailVerification(auth.currentUser);
+                showToast("Verification email resent!", "success");
+                resendCooldown = 20;
+                const btn = document.getElementById('resend-verify-btn');
+                btn.disabled = true;
+                resendTimer = setInterval(() => {
+                    resendCooldown--;
+                    btn.innerText = `Resend Email (${resendCooldown}s)`;
+                    if (resendCooldown <= 0) {
+                        clearInterval(resendTimer);
+                        btn.disabled = false;
+                        btn.innerText = "Resend Verification Email";
+                    }
+                }, 1000);
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        };
+
+        window.checkEmailVerificationDone = async () => {
+            await auth.currentUser.reload();
+            if (auth.currentUser.emailVerified) {
+                initUserFlow();
+            } else {
+                showToast("Email not verified yet. Check spam folder if not found.", "error");
+            }
+        };
+
+        window.logout = () => signOut(auth).then(() => window.location.reload());
+
+        // --- AUTH STATE MONITOR ---
+        onAuthStateChanged(auth, async (user) => {
+            currentUser = user;
+            if (user) {
+                document.getElementById('auth-section').classList.add('hidden');
+                
+                // Check Ban System First
+                const banSnap = await get(ref(db, `bans/${user.uid}`));
+                if (banSnap.exists()) {
+                    const banData = banSnap.val();
+                    if (banData.until > Date.now()) {
+                        showBanScreen(banData);
+                        return;
+                    } else {
+                        await remove(ref(db, `bans/${user.uid}`)); // Unbanned automatically
+                    }
+                }
+
+                const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
+                if (!user.emailVerified && !isGoogle) {
+                    document.getElementById('verify-section').classList.remove('hidden');
+                } else {
+                    document.getElementById('verify-section').classList.add('hidden');
+                    initUserFlow();
+                }
+            } else {
+                document.getElementById('auth-section').classList.remove('hidden');
+                document.getElementById('app-dashboard').classList.add('hidden');
+            }
+        });
+
+        // --- USER INIT FLOW & PRIVACY POLICY ---
+        async function initUserFlow() {
+            const userSnap = await get(ref(db, `users/${currentUser.uid}`));
+            
+            if (!userSnap.exists()) {
+                // First Time Login
+                showPrivacyPolicy();
+            } else {
+                userData = userSnap.val();
+                if (!userData.privacyAccepted) {
+                    showPrivacyPolicy();
+                } else if (!userData.profileCompleted) {
+                    showCompleteProfileDrawer();
+                } else {
+                    loadDashboard();
+                }
+            }
+        }
+
+        function showBanScreen(banData) {
+            document.getElementById('ban-screen').classList.remove('hidden');
+            document.getElementById('ban-reason-text').innerText = `Reason: ${banData.reason || 'Terms violation'}`;
+            
+            const updateTimer = () => {
+                const diff = banData.until - Date.now();
+                if (diff <= 0) {
+                    window.location.reload();
+                    return;
+                }
+                const hrs = Math.floor(diff / 3600000);
+                const mins = Math.floor((diff % 3600000) / 60000);
+                const secs = Math.floor((diff % 60000) / 1000);
+                document.getElementById('ban-timer-text').innerText = `Ban expires in: ${hrs}h ${mins}m ${secs}s`;
+            };
+            setInterval(updateTimer, 1000);
+            updateTimer();
+
+            if (banData.evidence) {
+                document.getElementById('ban-evidence-container').innerHTML = `<img src="${banData.evidence}" style="max-width:100%; border-radius:8px;">`;
+            }
+        }
+
+        function showPrivacyPolicy() {
+            document.getElementById('privacy-modal').classList.remove('hidden');
+            const scrollBox = document.getElementById('privacy-scroll-box');
+            const checkbox = document.getElementById('privacy-checkbox');
+            const btn = document.getElementById('privacy-continue-btn');
+
+            scrollBox.onscroll = () => {
+                if (scrollBox.scrollTop + scrollBox.clientHeight >= scrollBox.scrollHeight - 5) {
+                    checkbox.disabled = false;
+                }
+            };
+
+            checkbox.onchange = () => {
+                btn.disabled = !checkbox.checked;
+            };
+        }
+
+        window.acceptPrivacyPolicy = async () => {
+            document.getElementById('privacy-modal').classList.add('hidden');
+            const code = await generateUniqueFriendCode();
+            
+            await update(ref(db, `users/${currentUser.uid}`), {
+                uid: currentUser.uid,
+                email: currentUser.email,
+                friendCode: code,
+                privacyAccepted: true,
+                settings: { darkMode: false, techLang: false }
+            });
+
+            showCompleteProfileDrawer();
+        };
+
+        function showCompleteProfileDrawer() {
+            document.getElementById('complete-profile-modal').classList.remove('hidden');
+        }
+
+        window.saveInitialProfile = async () => {
+            const name = document.getElementById('init-display-name').value.trim();
+            const bio = document.getElementById('init-bio').value.trim();
+            const file = document.getElementById('init-avatar-file').files[0];
+
+            if (name.length < 3 || name.length > 10) return showToast("Display name must be 3 to 10 characters", "error");
+
+            let avatarUrl = "https://via.placeholder.com/150";
+            if (file) {
+                const maxMb = (userData?.premiumExpiry && userData.premiumExpiry > Date.now()) ? 10 : 5;
+                if (file.size > maxMb * 1024 * 1024) return showToast(`Image exceeds ${maxMb}MB limit`, "error");
+                avatarUrl = await uploadFileToCloudinary(file);
+            }
+
+            await update(ref(db, `users/${currentUser.uid}`), {
+                displayName: name,
+                bio: bio,
+                photoURL: avatarUrl,
+                profileCompleted: true
+            });
+
+            document.getElementById('complete-profile-modal').classList.add('hidden');
+            loadDashboard();
+        };
+
+        // --- DASHBOARD & PROFILE SYNC ---
+        async function loadDashboard() {
+            document.getElementById('app-dashboard').classList.remove('hidden');
+            
+            // Listen to Realtime User Data & Settings Sync
+            onValue(ref(db, `users/${currentUser.uid}`), (snap) => {
+                userData = snap.val();
+                applySettings(userData.settings || {});
+                updateNavAndDrawers();
+                checkPremiumExpiry();
+            });
+
+            loadMyWorkspaces();
+            listenFriendRequests();
+            listenFriendList();
+        }
+
+        function updateNavAndDrawers() {
+            document.getElementById('nav-user-info').classList.remove('hidden');
+            document.getElementById('nav-avatar').src = userData.photoURL;
+            document.getElementById('nav-display-name').innerText = userData.displayName;
+
+            document.getElementById('drawer-avatar-img').src = userData.photoURL;
+            document.getElementById('drawer-friend-code').value = userData.friendCode;
+            document.getElementById('drawer-uid').value = userData.uid;
+            document.getElementById('edit-display-name').value = userData.displayName;
+            document.getElementById('edit-bio').value = userData.bio || '';
+        }
+
+        function applySettings(settings) {
+            document.body.classList.toggle('dark-mode', !!settings.darkMode);
+            document.getElementById('setting-darkmode').checked = !!settings.darkMode;
+            document.getElementById('setting-techlang').checked = !!settings.techLang;
+
+            // Apply Technical Language Glossary
+            const terms = {
+                createWs: settings.techLang ? "Initialize Repository" : "Create workspace",
+                joinWs: settings.techLang ? "Connect Node" : "Join workspace"
+            };
+
+            document.querySelectorAll('.lang-term').forEach(el => {
+                const key = el.getAttribute('data-key');
+                if (terms[key]) el.innerText = terms[key];
+            });
+        }
+
+        window.saveSettings = async () => {
+            const settings = {
+                darkMode: document.getElementById('setting-darkmode').checked,
+                techLang: document.getElementById('setting-techlang').checked
+            };
+            await update(ref(db, `users/${currentUser.uid}/settings`), settings);
+            showToast("Settings saved and synced!", "success");
+            closeDrawer('settings-drawer');
+        };
+
+        window.saveEditedProfile = async () => {
+            const name = document.getElementById('edit-display-name').value.trim();
+            const bio = document.getElementById('edit-bio').value.trim();
+            const file = document.getElementById('edit-avatar-file').files[0];
+
+            if (name.length < 3 || name.length > 10) return showToast("Name must be 3-10 chars", "error");
+
+            const updates = { displayName: name, bio: bio };
+
+            if (file) {
+                const maxMb = (userData?.premiumExpiry && userData.premiumExpiry > Date.now()) ? 10 : 5;
+                if (file.size > maxMb * 1024 * 1024) return showToast(`Max file limit is ${maxMb}MB`, "error");
+                updates.photoURL = await uploadFileToCloudinary(file);
+            }
+
+            await update(ref(db, `users/${currentUser.uid}`), updates);
+            showToast("Profile updated!", "success");
+            closeDrawer('profile-drawer');
+        };
+
+        // --- PREMIUM REDEEM SYSTEM ---
+        function checkPremiumExpiry() {
+            const container = document.getElementById('premium-timer-container');
+            if (userData.premiumExpiry && userData.premiumExpiry > Date.now()) {
+                container.classList.remove('hidden');
+                document.getElementById('prof-limit-text').innerText = "10";
+                
+                const diff = userData.premiumExpiry - Date.now();
+                const days = Math.floor(diff / 86400000);
+                const hrs = Math.floor((diff % 86400000) / 3600000);
+                document.getElementById('premium-timer-text').innerText = `${days} Days ${hrs} Hours left`;
+            } else {
+                container.classList.add('hidden');
+                document.getElementById('prof-limit-text').innerText = "5";
+            }
+        }
+
+        window.redeemCode = async () => {
+            const code = document.getElementById('redeem-code-input').value.trim();
+            if (!code) return showToast("Enter code", "error");
+
+            const codeSnap = await get(ref(db, `redeemCodes/${code}`));
+            if (!codeSnap.exists()) return showToast("Invalid redeem code", "error");
+
+            const codeData = codeSnap.val();
+            if (codeData.used) return showToast("Redeem code already used", "error");
+            if (codeData.expiresAt && codeData.expiresAt < Date.now()) return showToast("Redeem code expired", "error");
+
+            const durationMs = (codeData.days || 30) * 86400000;
+            const currentExpiry = (userData.premiumExpiry && userData.premiumExpiry > Date.now()) ? userData.premiumExpiry : Date.now();
+            
+            await update(ref(db, `users/${currentUser.uid}`), {
+                premiumExpiry: currentExpiry + durationMs
+            });
+
+            await update(ref(db, `redeemCodes/${code}`), { used: true, usedBy: currentUser.uid });
+
+            showToast(`Redeemed! ${codeData.days} Days Premium Added`, "success");
+            closeDrawer('redeem-drawer');
+        };
+
+        // --- WORKSPACE MANAGEMENT ---
+        window.createWorkspace = async () => {
+            const name = document.getElementById('ws-create-name').value.trim();
+            const iconFile = document.getElementById('ws-create-icon').files[0];
+
+            if (!name) return showToast("Enter workspace name", "error");
+            if (iconFile && iconFile.size > 8 * 1024 * 1024) return showToast("Icon must be under 8MB", "error");
+
+            let iconUrl = "https://via.placeholder.com/150";
+            if (iconFile) iconUrl = await uploadFileToCloudinary(iconFile);
+
+            const pin = await generateUniqueWorkspacePin();
+            const wsRef = push(ref(db, 'workspaces'));
+            const wsId = wsRef.key;
+
+            const wsData = {
+                id: wsId,
+                name: name,
+                icon: iconUrl,
+                pin: pin,
+                creatorUid: currentUser.uid,
+                requireApproval: false,
+                members: { [currentUser.uid]: { role: 'creator', joinedAt: Date.now() } }
+            };
+
+            await set(wsRef, wsData);
+            await set(ref(db, `users/${currentUser.uid}/workspaces/${wsId}`), true);
+
+            showToast("Workspace created!", "success");
+            closeDrawer('create-workspace-drawer');
+            openWorkspace(wsId);
+        };
+
+        window.joinWorkspace = async () => {
+            const pin = document.getElementById('ws-join-pin').value.trim();
+            if (!pin) return showToast("Enter 8-digit PIN", "error");
+
+            const q = query(ref(db, 'workspaces'), orderByChild('pin'), equalTo(pin));
+            const snap = await get(q);
+
+            if (!snap.exists()) return showToast("Workspace not found", "error");
+
+            const wsId = Object.keys(snap.val())[0];
+            const ws = snap.val()[wsId];
+
+            const memberCount = Object.keys(ws.members || {}).length;
+            if (memberCount >= 100) return showToast("Workspace is full (Max 100 members)", "error");
+
+            if (ws.requireApproval) {
+                await set(ref(db, `workspaces/${wsId}/joinRequests/${currentUser.uid}`), {
+                    uid: currentUser.uid,
+                    displayName: userData.displayName,
+                    requestedAt: Date.now()
+                });
+                showToast("Request sent to admin", "info");
+            } else {
+                await set(ref(db, `workspaces/${wsId}/members/${currentUser.uid}`), { role: 'member', joinedAt: Date.now() });
+                await set(ref(db, `users/${currentUser.uid}/workspaces/${wsId}`), true);
+                showToast("Joined workspace!", "success");
+                openWorkspace(wsId);
+            }
+            closeDrawer('join-workspace-drawer');
+        };
+
+        function loadMyWorkspaces() {
+            onValue(ref(db, `users/${currentUser.uid}/workspaces`), async (snap) => {
+                const list = document.getElementById('my-workspaces-list');
+                list.innerHTML = '';
+                if (!snap.exists()) {
+                    list.innerHTML = '<p style="font-size:0.85rem; color:var(--text-muted)">No workspaces yet</p>';
+                    return;
+                }
+
+                const wsIds = Object.keys(snap.val());
+                for (let id of wsIds) {
+                    const wsSnap = await get(ref(db, `workspaces/${id}`));
+                    if (wsSnap.exists()) {
+                        const ws = wsSnap.val();
+                        const btn = document.createElement('div');
+                        btn.className = 'sidebar-menu-btn';
+                        btn.innerHTML = `<img src="${ws.icon}" class="avatar avatar-sm"> <span>${ws.name}</span>`;
+                        btn.onclick = () => { openWorkspace(id); toggleSidebar(); };
+                        list.appendChild(btn);
+                    }
+                }
+            });
+        }
+
+        // --- ACTIVE WORKSPACE REALTIME SYNC ---
+        function openWorkspace(wsId) {
+            activeWorkspaceId = wsId;
+            document.getElementById('empty-workspace-view').classList.add('hidden');
+            document.getElementById('active-workspace-view').classList.remove('hidden');
+
+            onValue(ref(db, `workspaces/${wsId}`), (snap) => {
+                if (!snap.exists()) {
+                    activeWorkspaceId = null;
+                    document.getElementById('empty-workspace-view').classList.remove('hidden');
+                    document.getElementById('active-workspace-view').classList.add('hidden');
+                    return;
+                }
+
+                activeWorkspaceData = snap.val();
+                renderWorkspaceHeader();
+                renderMembers();
+                renderTasks();
+                renderProjectShares();
+                renderActivityLogs();
+                renderBugLogs();
+                renderTeamChat();
+                renderJoinRequests();
+            });
+        }
+
+        function renderWorkspaceHeader() {
+            document.getElementById('ws-display-name').innerText = activeWorkspaceData.name;
+            document.getElementById('ws-display-pin').innerText = activeWorkspaceData.pin;
+            document.getElementById('ws-display-icon').src = activeWorkspaceData.icon;
+
+            const myRole = activeWorkspaceData.members[currentUser.uid]?.role;
+            const isCreator = myRole === 'creator';
+            const isAdmin = isCreator || myRole === 'admin';
+
+            document.getElementById('ws-config-btn').classList.toggle('hidden', !isAdmin);
+            document.getElementById('ws-delete-btn').classList.toggle('hidden', !isCreator);
+        }
+
+        window.toggleWorkspaceConfig = () => {
+            const sec = document.getElementById('ws-config-section');
+            sec.classList.toggle('hidden');
+            document.getElementById('cfg-ws-name').value = activeWorkspaceData.name;
+            document.getElementById('cfg-ws-approval').checked = !!activeWorkspaceData.requireApproval;
+        };
+
+        window.saveWorkspaceConfig = async () => {
+            const name = document.getElementById('cfg-ws-name').value.trim();
+            const iconFile = document.getElementById('cfg-ws-icon').files[0];
+            const approval = document.getElementById('cfg-ws-approval').checked;
+
+            const updates = { name: name, requireApproval: approval };
+            if (iconFile) updates.icon = await uploadFileToCloudinary(iconFile);
+
+            await update(ref(db, `workspaces/${activeWorkspaceId}`), updates);
+            logActivity(`Updated workspace configuration`);
+            showToast("Workspace updated!", "success");
+        };
+
+        window.deleteWorkspacePermanently = async () => {
+            if (confirm("Delete workspace permanently? This cannot be undone.")) {
+                await remove(ref(db, `workspaces/${activeWorkspaceId}`));
+                showToast("Workspace deleted", "info");
+            }
+        };
+
+        // --- TASKS ---
+        window.addWorkspaceTask = async () => {
+            const taskText = document.getElementById('task-input').value.trim();
+            const deadline = document.getElementById('task-deadline').value;
+
+            if (!taskText) return;
+            const taskRef = push(ref(db, `workspaces/${activeWorkspaceId}/tasks`));
+            await set(taskRef, {
+                text: taskText,
+                deadline: deadline || null,
+                completed: false,
+                createdBy: userData.displayName
+            });
+
+            document.getElementById('task-input').value = '';
+            logActivity(`Added task: "${taskText}"`);
+        };
+
+        function renderTasks() {
+            const list = document.getElementById('tasks-list');
+            list.innerHTML = '';
+            const tasks = activeWorkspaceData.tasks || {};
+            
+            Object.keys(tasks).forEach(id => {
+                const t = tasks[id];
+                const div = document.createElement('div');
+                div.style.cssText = "display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:var(--bg); border-radius:6px;";
+                div.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTaskDone('${id}', this.checked)" style="width:auto;">
+                        <span style="${t.completed ? 'text-decoration:line-through; opacity:0.6;' : ''}">${t.text}</span>
+                        ${t.deadline ? `<small style="color:var(--warning);"><i class="fas fa-clock"></i> ${t.deadline}</small>` : ''}
+                    </div>
+                    <i class="fas fa-trash" style="color:var(--error); cursor:pointer;" onclick="deleteTask('${id}')"></i>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        window.toggleTaskDone = async (taskId, state) => {
+            await update(ref(db, `workspaces/${activeWorkspaceId}/tasks/${taskId}`), { completed: state });
+        };
+
+        window.deleteTask = async (taskId) => {
+            await remove(ref(db, `workspaces/${activeWorkspaceId}/tasks/${taskId}`));
+        };
+
+        // --- MEMBERS & DIRECTORY ---
+        async function renderMembers() {
+            const list = document.getElementById('member-directory-list');
+            list.innerHTML = '';
+            const members = activeWorkspaceData.members || {};
+            const memberUids = Object.keys(members);
+            
+            document.getElementById('ws-member-count').innerText = memberUids.length;
+
+            for (let uid of memberUids) {
+                const uSnap = await get(ref(db, `users/${uid}`));
+                if (!uSnap.exists()) continue;
+                const u = uSnap.val();
+                const role = members[uid].role;
+
+                const card = document.createElement('div');
+                card.className = "member-item-card";
+                card.style.cssText = "padding:10px; border:1px solid var(--border); border-radius:8px; display:flex; align-items:center; justify-content:space-between;";
+                card.setAttribute('data-name', u.displayName.toLowerCase());
+                card.setAttribute('data-uid', u.uid.toLowerCase());
+
+                const myRole = members[currentUser.uid]?.role;
+                let actions = '';
+                if (myRole === 'creator' && uid !== currentUser.uid) {
+                    actions = `
+                        <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.7rem;" onclick="toggleAdminRole('${uid}', '${role}')">${role === 'admin' ? 'Remove Admin' : 'Make Admin'}</button>
+                        <button class="btn btn-danger" style="padding:4px 8px; font-size:0.7rem;" onclick="removeMember('${uid}')">Kick</button>
+                    `;
+                } else if (myRole === 'admin' && role === 'member' && uid !== currentUser.uid) {
+                    actions = `
+                        <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.7rem;" onclick="toggleAdminRole('${uid}', '${role}')">Make Admin</button>
+                        <button class="btn btn-danger" style="padding:4px 8px; font-size:0.7rem;" onclick="removeMember('${uid}')">Kick</button>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <img src="${u.photoURL}" class="avatar avatar-sm">
+                        <div>
+                            <strong>${u.displayName}</strong> ${role === 'creator' ? '<span class="badge-creator">Creator</span>' : role === 'admin' ? '<span class="badge-admin">Admin</span>' : ''}
+                            <div style="font-size:0.7rem; color:var(--text-muted);">${u.uid}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:4px;">${actions}</div>
+                `;
+                list.appendChild(card);
+            }
+        }
+
+        window.filterMembers = () => {
+            const query = document.getElementById('member-search-input').value.toLowerCase();
+            const cards = document.querySelectorAll('.member-item-card');
+            let found = false;
+
+            cards.forEach(card => {
+                const name = card.getAttribute('data-name');
+                const uid = card.getAttribute('data-uid');
+                if (name.includes(query) || uid.includes(query)) {
+                    card.classList.remove('hidden');
+                    found = true;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            let noMatch = document.getElementById('no-member-found');
+            if (!found) {
+                if (!noMatch) {
+                    noMatch = document.createElement('div');
+                    noMatch.id = 'no-member-found';
+                    noMatch.style.color = 'var(--text-muted)';
+                    noMatch.innerText = "Member not found.";
+                    document.getElementById('member-directory-list').appendChild(noMatch);
+                }
+            } else if (noMatch) {
+                noMatch.remove();
+            }
+        };
+
+        window.toggleAdminRole = async (targetUid, currentRole) => {
+            const newRole = currentRole === 'admin' ? 'member' : 'admin';
+            await update(ref(db, `workspaces/${activeWorkspaceId}/members/${targetUid}`), { role: newRole });
+        };
+
+        window.removeMember = async (targetUid) => {
+            await remove(ref(db, `workspaces/${activeWorkspaceId}/members/${targetUid}`));
+            await remove(ref(db, `users/${targetUid}/workspaces/${activeWorkspaceId}`));
+            logActivity(`Removed member from workspace`);
+        };
+
+        // --- JOIN REQUESTS APPROVAL ---
+        function renderJoinRequests() {
+            const list = document.getElementById('ws-requests-list');
+            const sec = document.getElementById('ws-join-requests-section');
+            const requests = activeWorkspaceData.joinRequests || {};
+            
+            const myRole = activeWorkspaceData.members[currentUser.uid]?.role;
+            if (!activeWorkspaceData.requireApproval || (myRole !== 'creator' && myRole !== 'admin')) {
+                sec.classList.add('hidden');
+                return;
+            }
+
+            sec.classList.remove('hidden');
+            list.innerHTML = '';
+            
+            Object.keys(requests).forEach(uid => {
+                const req = requests[uid];
+                const div = document.createElement('div');
+                div.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:8px; border:1px solid var(--border); border-radius:6px;";
+                div.innerHTML = `
+                    <span>${req.displayName} (${uid})</span>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-primary" style="padding:4px 8px; font-size:0.75rem;" onclick="approveJoinRequest('${uid}')">Approve</button>
+                        <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="denyJoinRequest('${uid}')">Deny</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        window.approveJoinRequest = async (targetUid) => {
+            await set(ref(db, `workspaces/${activeWorkspaceId}/members/${targetUid}`), { role: 'member', joinedAt: Date.now() });
+            await set(ref(db, `users/${targetUid}/workspaces/${activeWorkspaceId}`), true);
+            await remove(ref(db, `workspaces/${activeWorkspaceId}/joinRequests/${targetUid}`));
+        };
+
+        window.denyJoinRequest = async (targetUid) => {
+            await remove(ref(db, `workspaces/${activeWorkspaceId}/joinRequests/${targetUid}`));
+        };
+
+        // --- PROJECT SHARES ---
+        window.uploadProjectFile = async () => {
+            const file = document.getElementById('project-share-file').files[0];
+            if (!file) return;
+
+            if (file.size > 100 * 1024 * 1024) return showToast("Per file limit is 100MB", "error");
+
+            const url = await uploadFileToCloudinary(file);
+            const shareRef = push(ref(db, `workspaces/${activeWorkspaceId}/projects`));
+            await set(shareRef, {
+                fileName: file.name,
+                fileUrl: url,
+                sharedBy: userData.displayName,
+                timestamp: Date.now()
+            });
+
+            logActivity(`Shared project file: ${file.name}`);
+            showToast("Project shared!", "success");
+        };
+
+        function renderProjectShares() {
+            const list = document.getElementById('project-shares-list');
+            list.innerHTML = '';
+            const projects = activeWorkspaceData.projects || {};
+
+            Object.keys(projects).forEach(id => {
+                const p = projects[id];
+                const div = document.createElement('div');
+                div.style.cssText = "display:flex; align-items:center; justify-content:space-between; padding:10px; background:var(--bg); border-radius:8px;";
+                div.innerHTML = `
+                    <div>
+                        <a href="${p.fileUrl}" target="_blank" style="color:var(--primary); font-weight:600;"><i class="fas fa-file-download"></i> ${p.fileName}</a>
+                        <div style="font-size:0.75rem; color:var(--text-muted);">Shared by: ${p.sharedBy}</div>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // --- ACTIVITY LOGS ---
+        function logActivity(actionText) {
+            if (!activeWorkspaceId) return;
+            const logRef = push(ref(db, `workspaces/${activeWorkspaceId}/activityLogs`));
+            set(logRef, {
+                text: `${userData.displayName} ${actionText}`,
+                time: new Date().toLocaleString()
+            });
+        }
+
+        function renderActivityLogs() {
+            const list = document.getElementById('activity-logs-list');
+            list.innerHTML = '';
+            const logs = activeWorkspaceData.activityLogs || {};
+
+            Object.keys(logs).reverse().forEach(id => {
+                const l = logs[id];
+                const div = document.createElement('div');
+                div.innerText = `[${l.time}] ${l.text}`;
+                list.appendChild(div);
+            });
+        }
+
+        // --- BUG LOGS ---
+        window.toggleBugReportForm = () => {
+            document.getElementById('bug-report-form').classList.toggle('hidden');
+        };
+
+        window.submitBugReport = async () => {
+            const title = document.getElementById('bug-title').value.trim();
+            const desc = document.getElementById('bug-desc').value.trim();
+            const file = document.getElementById('bug-evidence-file').files[0];
+
+            if (!title || !desc) return showToast("Title and Description required", "error");
+            if (file && file.size > 10 * 1024 * 1024) return showToast("Evidence file max 10MB", "error");
+
+            let evidenceUrl = null;
+            if (file) evidenceUrl = await uploadFileToCloudinary(file);
+
+            const bugRef = push(ref(db, `workspaces/${activeWorkspaceId}/bugs`));
+            await set(bugRef, {
+                title: title,
+                desc: desc,
+                evidence: evidenceUrl,
+                fixed: false,
+                reportedBy: userData.displayName
+            });
+
+            toggleBugReportForm();
+            logActivity(`Reported bug: ${title}`);
+            showToast("Bug reported!", "success");
+        };
+
+        function renderBugLogs() {
+            const list = document.getElementById('bug-logs-list');
+            list.innerHTML = '';
+            const bugs = activeWorkspaceData.bugs || {};
+
+            Object.keys(bugs).forEach(id => {
+                const b = bugs[id];
+                const div = document.createElement('div');
+                div.style.cssText = "padding:12px; border:1px solid var(--border); border-radius:8px; background:var(--bg);";
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong>${b.title}</strong>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <input type="checkbox" ${b.fixed ? 'checked' : ''} onchange="toggleBugFixed('${id}', this.checked)" style="width:auto;">
+                            <label style="margin:0; font-size:0.8rem;">Mark as fixed</label>
+                        </div>
+                    </div>
+                    <p style="font-size:0.85rem; margin-top:5px; color:var(--text-muted);">${b.desc}</p>
+                    ${b.evidence ? `<a href="${b.evidence}" target="_blank" style="font-size:0.75rem; color:var(--primary);"><i class="fas fa-paperclip"></i> View Evidence</a>` : ''}
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        window.toggleBugFixed = async (bugId, state) => {
+            await update(ref(db, `workspaces/${activeWorkspaceId}/bugs/${bugId}`), { fixed: state });
+        };
+
+        // --- TEAM COMMUNICATIONS & MENTIONS ---
+        window.sendTeamMessage = async () => {
+            const text = document.getElementById('chat-input').value.trim();
+            if (!text) return;
+
+            const isPrem = userData.premiumExpiry && userData.premiumExpiry > Date.now();
+            const msgRef = push(ref(db, `workspaces/${activeWorkspaceId}/chats`));
+
+            await set(msgRef, {
+                senderUid: currentUser.uid,
+                senderName: userData.displayName,
+                senderPhoto: userData.photoURL,
+                isPremium: !!isPrem,
+                text: text,
+                timestamp: Date.now()
+            });
+
+            // Handle Mentions
+            const matches = text.match(/@(\w+)/g);
+            if (matches) {
+                const members = activeWorkspaceData.members || {};
+                for (let uid of Object.keys(members)) {
+                    const uSnap = await get(ref(db, `users/${uid}`));
+                    if (uSnap.exists()) {
+                        const u = uSnap.val();
+                        if (matches.includes(`@${u.displayName}`)) {
+                            await push(ref(db, `users/${uid}/notifications`), {
+                                msg: `You got mentioned by ${userData.displayName} in the workspace ${activeWorkspaceData.name}`,
+                                timestamp: Date.now()
+                            });
+                        }
+                    }
+                }
+            }
+
+            document.getElementById('chat-input').value = '';
+        };
+
+        window.handleChatMention = async (input) => {
+            const val = input.value;
+            const drop = document.getElementById('mention-dropdown');
+            
+            if (val.endsWith('@')) {
+                drop.classList.remove('hidden');
+                drop.innerHTML = '';
+                const members = activeWorkspaceData.members || {};
+                
+                for (let uid of Object.keys(members)) {
+                    const uSnap = await get(ref(db, `users/${uid}`));
+                    if (uSnap.exists()) {
+                        const u = uSnap.val();
+                        const item = document.createElement('div');
+                        item.style.cssText = "padding:6px; cursor:pointer; font-size:0.85rem;";
+                        item.innerText = `@${u.displayName}`;
+                        item.onclick = () => {
+                            input.value = input.value + u.displayName + ' ';
+                            drop.classList.add('hidden');
+                        };
+                        drop.appendChild(item);
+                    }
+                }
+            } else if (!val.includes('@')) {
+                drop.classList.add('hidden');
+            }
+        };
+
+        window.uploadChatAttachment = async (inputEl) => {
+            const file = inputEl.files[0];
+            if (!file) return;
+
+            const url = await uploadFileToCloudinary(file);
+            const isPrem = userData.premiumExpiry && userData.premiumExpiry > Date.now();
+            const msgRef = push(ref(db, `workspaces/${activeWorkspaceId}/chats`));
+
+            await set(msgRef, {
+                senderUid: currentUser.uid,
+                senderName: userData.displayName,
+                senderPhoto: userData.photoURL,
+                isPremium: !!isPrem,
+                fileUrl: url,
+                fileName: file.name,
+                timestamp: Date.now()
+            });
+        };
+
+        window.captureCameraMedia = async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.play();
+            
+            setTimeout(async () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth || 320;
+                canvas.height = video.videoHeight || 240;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                stream.getTracks().forEach(t => t.stop());
+                
+                canvas.toBlob(async (blob) => {
+                    const url = await uploadFileToCloudinary(blob);
+                    const msgRef = push(ref(db, `workspaces/${activeWorkspaceId}/chats`));
+                    set(msgRef, {
+                        senderUid: currentUser.uid,
+                        senderName: userData.displayName,
+                        senderPhoto: userData.photoURL,
+                        fileUrl: url,
+                        timestamp: Date.now()
+                    });
+                }, 'image/jpeg');
+            }, 1000);
+        };
+
+        window.recordVoiceNote = async (target) => {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mediaRecorder = new MediaRecorder(stream);
+            const chunks = [];
+
+            mediaRecorder.ondataavailable = e => chunks.push(e.data);
+            mediaRecorder.onstop = async () => {
+                const blob = new Blob(chunks, { type: 'audio/webm' });
+                const url = await uploadFileToCloudinary(blob);
+
+                if (target === 'team') {
+                    const msgRef = push(ref(db, `workspaces/${activeWorkspaceId}/chats`));
+                    set(msgRef, {
+                        senderUid: currentUser.uid,
+                        senderName: userData.displayName,
+                        senderPhoto: userData.photoURL,
+                        audioUrl: url,
+                        timestamp: Date.now()
+                    });
+                } else if (target === 'dm') {
+                    sendDirectMessagePayload({ audioUrl: url });
+                }
+            };
+
+            mediaRecorder.start();
+            showToast("Recording audio (3s)...", "info");
+            setTimeout(() => mediaRecorder.stop(), 3000);
+        };
+
+        function renderTeamChat() {
+            const box = document.getElementById('team-chat-box');
+            box.innerHTML = '';
+            const chats = activeWorkspaceData.chats || {};
+
+            Object.keys(chats).forEach(id => {
+                const c = chats[id];
+                const isSelf = c.senderUid === currentUser.uid;
+
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `chat-msg ${isSelf ? 'self' : ''}`;
+                
+                let content = c.text ? `<div>${c.text}</div>` : '';
+                if (c.fileUrl) content += `<a href="${c.fileUrl}" target="_blank" style="color:inherit;"><i class="fas fa-paperclip"></i> ${c.fileName || 'Attachment'}</a>`;
+                if (c.audioUrl) content += `<audio controls src="${c.audioUrl}"></audio>`;
+
+                msgDiv.innerHTML = `
+                    <img src="${c.senderPhoto}" class="avatar avatar-sm">
+                    <div class="chat-bubble">
+                        <div style="font-size:0.7rem; opacity:0.8; margin-bottom:2px;">
+                            ${c.senderName} ${c.isPremium ? '<span class="badge-premium">PREMIUM</span>' : ''}
+                        </div>
+                        ${content}
+                    </div>
+                `;
+                box.appendChild(msgDiv);
+            });
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // Notification Listener for Mentions
+        function listenNotifications() {
+            onValue(ref(db, `users/${currentUser.uid}/notifications`), (snap) => {
+                if (snap.exists()) {
+                    snap.forEach(child => {
+                        showToast(child.val().msg, "info");
+                    });
+                    remove(ref(db, `users/${currentUser.uid}/notifications`));
+                }
+            });
+        }
+
+        // --- INVITE FEATURES ---
+        window.showInviteQR = () => {
+            const modal = document.getElementById('qr-modal');
+            modal.classList.remove('hidden');
+            const container = document.getElementById('qrcode');
+            container.innerHTML = '';
+            new QRCode(container, {
+                text: activeWorkspaceData.pin,
+                width: 180,
+                height: 180
+            });
+        };
+
+        window.copyInviteLink = () => {
+            const link = `${window.location.origin}?joinPin=${activeWorkspaceData.pin}`;
+            navigator.clipboard.writeText(link);
+            showToast("Invite link copied to clipboard!", "success");
+        };
+
+        // --- FRIEND SYSTEM ---
+        window.sendFriendRequest = async () => {
+            const input = document.getElementById('friend-target-id').value.trim();
+            if (!input) return showToast("Enter Code or UID", "error");
+
+            if (input === userData.friendCode || input === userData.uid) {
+                return showToast("You cannot enter your own friend code or UID", "error");
+            }
+
+            // Search by UID or Friend Code
+            let targetUid = null;
+            const uidSnap = await get(ref(db, `users/${input}`));
+            
+            if (uidSnap.exists()) {
+                targetUid = input;
+            } else {
+                const q = query(ref(db, 'users'), orderByChild('friendCode'), equalTo(input));
+                const codeSnap = await get(q);
+                if (codeSnap.exists()) targetUid = Object.keys(codeSnap.val())[0];
+            }
+
+            if (!targetUid) return showToast("The user was not found in our database", "error");
+
+            await set(ref(db, `users/${targetUid}/friendRequests/${currentUser.uid}`), {
+                fromUid: currentUser.uid,
+                fromName: userData.displayName,
+                fromPhoto: userData.photoURL,
+                timestamp: Date.now()
+            });
+
+            showToast("Request sent.", "success");
+            closeDrawer('add-friend-drawer');
+        };
+
+        function listenFriendRequests() {
+            onValue(ref(db, `users/${currentUser.uid}/friendRequests`), (snap) => {
+                const list = document.getElementById('friend-requests-list');
+                const badge = document.getElementById('pending-requests-badge');
+                list.innerHTML = '';
+
+                const requests = snap.val() || {};
+                const count = Object.keys(requests).length;
+
+                document.getElementById('drawer-pending-count').innerText = count;
+                badge.innerText = count;
+                badge.classList.toggle('hidden', count === 0);
+
+                Object.keys(requests).forEach(reqUid => {
+                    const r = requests[reqUid];
+                    const div = document.createElement('div');
+                    div.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:8px; border:1px solid var(--border); border-radius:8px;";
+                    div.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <img src="${r.fromPhoto}" class="avatar avatar-sm">
+                            <span>${r.fromName}</span>
+                        </div>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn btn-primary" style="padding:4px 8px; font-size:0.75rem;" onclick="acceptFriendRequest('${reqUid}', '${r.fromName}')">Accept</button>
+                            <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="denyFriendRequest('${reqUid}')">Deny</button>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+            });
+        }
+
+        window.acceptFriendRequest = async (targetUid, targetName) => {
+            await set(ref(db, `users/${currentUser.uid}/friends/${targetUid}`), { uid: targetUid, addedAt: Date.now() });
+            await set(ref(db, `users/${targetUid}/friends/${currentUser.uid}`), { uid: currentUser.uid, addedAt: Date.now() });
+            await remove(ref(db, `users/${currentUser.uid}/friendRequests/${targetUid}`));
+            showToast(`You are now friends with ${targetName}!`, "success");
+        };
+
+        window.denyFriendRequest = async (targetUid) => {
+            await remove(ref(db, `users/${currentUser.uid}/friendRequests/${targetUid}`));
+        };
+
+        function listenFriendList() {
+            onValue(ref(db, `users/${currentUser.uid}/friends`), async (snap) => {
+                const list = document.getElementById('friends-container-list');
+                list.innerHTML = '';
+                const friends = snap.val() || {};
+
+                for (let fUid of Object.keys(friends)) {
+                    const fSnap = await get(ref(db, `users/${fUid}`));
+                    if (!fSnap.exists()) continue;
+                    const f = fSnap.val();
+                    const isBlocked = !!friends[fUid].blocked;
+
+                    const div = document.createElement('div');
+                    div.style.cssText = "display:flex; align-items:center; justify-content:space-between; padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--bg);";
+                    div.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openDirectChat('${fUid}', '${f.displayName}')">
+                            <img src="${f.photoURL}" class="avatar avatar-sm">
+                            <strong>${f.displayName}</strong>
+                        </div>
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn btn-secondary" style="padding:4px 6px; font-size:0.7rem;" onclick="toggleBlockFriend('${fUid}', ${isBlocked})">${isBlocked ? 'Unblock' : 'Block'}</button>
+                            <button class="btn btn-danger" style="padding:4px 6px; font-size:0.7rem;" onclick="unfriend('${fUid}')">Unfriend</button>
+                            <button class="btn btn-secondary" style="padding:4px 6px; font-size:0.7rem; color:var(--error);" onclick="openReportModal('${fUid}')"><i class="fas fa-flag"></i></button>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                }
+            });
+        }
+
+        window.toggleBlockFriend = async (targetUid, isBlocked) => {
+            await update(ref(db, `users/${currentUser.uid}/friends/${targetUid}`), { blocked: !isBlocked });
+            showToast(isBlocked ? "Unblocked" : "Blocked", "info");
+        };
+
+        window.unfriend = async (targetUid) => {
+            await remove(ref(db, `users/${currentUser.uid}/friends/${targetUid}`));
+            await remove(ref(db, `users/${targetUid}/friends/${currentUser.uid}`));
+            showToast("Unfriended user", "info");
+        };
+
+        // --- DIRECT CHAT & REPORTING ---
+        window.openDirectChat = (targetUid, targetName) => {
+            activeDMTargetUid = targetUid;
+            document.getElementById('dm-target-name').innerText = `Chat with ${targetName}`;
+            document.getElementById('dm-modal').classList.remove('hidden');
+
+            const chatId = [currentUser.uid, targetUid].sort().join('_');
+            onValue(ref(db, `directChats/${chatId}`), (snap) => {
+                const box = document.getElementById('dm-chat-box');
+                box.innerHTML = '';
+                const chats = snap.val() || {};
+
+                Object.keys(chats).forEach(id => {
+                    const c = chats[id];
+                    const isSelf = c.senderUid === currentUser.uid;
+
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = `chat-msg ${isSelf ? 'self' : ''}`;
+                    let content = c.text ? `<div>${c.text}</div>` : '';
+                    if (c.audioUrl) content += `<audio controls src="${c.audioUrl}"></audio>`;
+
+                    msgDiv.innerHTML = `<div class="chat-bubble">${content}</div>`;
+                    box.appendChild(msgDiv);
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+        };
+
+        window.sendDirectMessage = () => {
+            const text = document.getElementById('dm-input').value.trim();
+            if (!text) return;
+            sendDirectMessagePayload({ text: text });
+            document.getElementById('dm-input').value = '';
+        };
+
+        async function sendDirectMessagePayload(payload) {
+            const chatId = [currentUser.uid, activeDMTargetUid].sort().join('_');
+            const msgRef = push(ref(db, `directChats/${chatId}`));
+            await set(msgRef, {
+                senderUid: currentUser.uid,
+                ...payload,
+                timestamp: Date.now()
+            });
+        }
+
+        let reportTargetUid = null;
+        window.openReportModal = (targetUid) => {
+            reportTargetUid = targetUid;
+            document.getElementById('report-modal').classList.remove('hidden');
+        };
+
+        window.submitFriendReport = async () => {
+            const cat = document.getElementById('report-category').value;
+            const desc = document.getElementById('report-desc').value.trim();
+            const file = document.getElementById('report-evidence-file').files[0];
+
+            let evidenceUrl = null;
+            if (file) evidenceUrl = await uploadFileToCloudinary(file);
+
+            const reportRef = push(ref(db, 'reports'));
+            await set(reportRef, {
+                reportedUid: reportTargetUid,
+                reporterUid: currentUser.uid,
+                category: cat,
+                desc: desc,
+                evidence: evidenceUrl,
+                timestamp: Date.now()
+            });
+
+            document.getElementById('report-modal').classList.add('hidden');
+            showToast("Report submitted.", "success");
+        };
+
+    </script>
+</body>
+</html>
