@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DevBand - Developer Collaboration Platform</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
@@ -17,568 +17,629 @@
             --card-bg: #ffffff;
             --text-main: #1e293b;
             --text-muted: #64748b;
-            --border-color: #e2e8f0;
+            --border: #e2e8f0;
             --error: #ef4444;
             --success: #10b981;
             --warning: #f59e0b;
             --sidebar-width: 320px;
-            --font-family: 'Inter', sans-serif;
-            --badge-bg: #e0e7ff;
-            --badge-text: #3730a3;
+            --font-main: 'Inter', sans-serif;
+            --badge-premium: linear-gradient(135deg, #f59e0b, #d97706);
         }
 
-        body.dark-theme {
+        body.dark-mode {
             --bg: #0f172a;
             --card-bg: #1e293b;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --border-color: #334155;
-            --badge-bg: #312e81;
-            --badge-text: #c7d2fe;
+            --border: #334155;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-family); }
-        body { background-color: var(--bg); color: var(--text-main); line-height: 1.6; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-main); }
+        body { background-color: var(--bg); color: var(--text-main); line-height: 1.6; overflow-x: hidden; transition: background-color 0.3s, color 0.3s; }
 
+        /* Utility Classes */
         .hidden { display: none !important; }
-        .btn { cursor: pointer; padding: 10px 18px; border-radius: 8px; border: none; font-weight: 600; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; }
+        .btn { cursor: pointer; padding: 10px 18px; border-radius: 8px; border: none; font-weight: 600; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; }
         .btn-primary { background: var(--primary); color: white; width: 100%; }
-        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
-        .btn-secondary { background: var(--border-color); color: var(--text-main); }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); }
+        .btn-secondary { background: #e2e8f0; color: #334155; }
+        .dark-mode .btn-secondary { background: #334155; color: #f8fafc; }
         .btn-danger { background: var(--error); color: white; }
-        .btn:active { transform: scale(0.98); }
-        .btn:disabled { background: #cbd5e1; cursor: not-allowed; opacity: 0.6; }
+        .btn-success { background: var(--success); color: white; }
+        .btn:disabled { background: #cbd5e1 !important; cursor: not-allowed !important; transform: none !important; }
 
-        .google-btn { background: #ffffff; color: #333; border: 1px solid var(--border-color); width: 100%; margin-top: 10px; }
-        body.dark-theme .google-btn { background: #334155; color: #fff; }
+        /* Navigation */
+        nav { background: var(--card-bg); padding: 0.8rem 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .logo-container { display: flex; align-items: center; gap: 12px; }
+        .hamburger-btn { font-size: 1.3rem; color: var(--text-main); cursor: pointer; padding: 8px; border-radius: 6px; }
+        .hamburger-btn:hover { background: rgba(0,0,0,0.05); }
+        .logo { font-size: 1.4rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+
+        /* Sidebar Drawer */
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); opacity: 0; visibility: hidden; transition: 0.3s; z-index: 999; backdrop-filter: blur(3px); }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+        .sidebar { position: fixed; left: calc(-1 * var(--sidebar-width)); top: 0; width: var(--sidebar-width); height: 100%; background: var(--card-bg); border-right: 1px solid var(--border); z-index: 1000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 20px; display: flex; flex-direction: column; overflow-y: auto; }
+        .sidebar.active { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .sidebar-menu { display: flex; flex-direction: column; gap: 10px; }
+        .sidebar-item { padding: 12px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 12px; font-weight: 500; transition: 0.2s; background: rgba(0,0,0,0.02); }
+        .sidebar-item:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        
+        .workspaces-section { margin-top: 20px; }
+        .workspace-list { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
+        .ws-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; }
+        .ws-item:hover, .ws-item.active { background: rgba(37, 99, 235, 0.1); border-color: var(--primary); }
+        .ws-icon { width: 28px; height: 28px; border-radius: 6px; object-fit: cover; background: #cbd5e1; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; color: white; }
+
+        /* Auth Container */
+        .auth-container { max-width: 420px; margin: 40px auto; padding: 35px; background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .input-group { margin-bottom: 18px; }
+        .input-group label { display: block; margin-bottom: 6px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+        input[type="text"], input[type="email"], input[type="password"], textarea, select { width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 8px; outline: none; transition: 0.2s; background: var(--bg); color: var(--text-main); font-size: 0.95rem; }
+        input:focus, textarea:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+
+        .google-btn { background: #fff; color: #333; border: 1px solid var(--border); width: 100%; margin-top: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .google-btn:hover { background: #f8fafc; }
+
+        /* Drawers & Modals */
+        .drawer { position: fixed; right: -450px; top: 0; width: 420px; max-width: 100%; height: 100%; background: var(--card-bg); border-left: 1px solid var(--border); z-index: 1001; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 25px; display: flex; flex-direction: column; overflow-y: auto; }
+        .drawer.active { right: 0; }
+        .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); padding: 20px; }
+        .modal-card { background: var(--card-bg); padding: 30px; border-radius: 16px; max-width: 500px; width: 100%; border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+
+        /* Dashboard */
+        .dashboard { max-width: 1100px; margin: 20px auto; padding: 0 20px; }
+        .empty-dashboard { text-align: center; padding: 80px 20px; background: var(--card-bg); border-radius: 16px; border: 2px dashed var(--border); margin-top: 30px; }
+
+        /* Workspace View Sections */
+        .ws-header-card { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .ws-title-area { display: flex; align-items: center; gap: 15px; }
+        .ws-main-img { width: 50px; height: 50px; border-radius: 10px; object-fit: cover; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; }
+        .pin-badge { font-family: 'Fira Code', monospace; background: rgba(37, 99, 235, 0.1); color: var(--primary); padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 0.9rem; display: inline-block; }
+
+        .section-card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); padding: 20px; margin-bottom: 20px; }
+        .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+
+        /* Realtime Tasks */
+        .task-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; background: var(--bg); }
+        .task-item.completed span { text-decoration: line-through; opacity: 0.6; }
+
+        /* Member Directory */
+        .member-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+        .member-card { padding: 12px; border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; gap: 12px; background: var(--bg); position: relative; }
+        .member-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .creator-tag { background: #fef3c7; color: #b45309; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
+        .admin-tag { background: #dbeafe; color: #1e40af; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
+
+        /* Team Chat */
+        .chat-box { height: 350px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 15px; background: var(--bg); margin-bottom: 15px; display: flex; flex-direction: column; gap: 12px; }
+        .chat-msg { display: flex; gap: 10px; max-width: 85%; }
+        .chat-msg-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .chat-msg-content { background: var(--card-bg); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border); font-size: 0.9rem; }
+        .chat-input-area { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        /* Premium Badge */
+        .premium-badge { background: var(--badge-premium); color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; display: inline-flex; align-items: center; gap: 3px; }
+
+        /* Toasts */
+        #toast-container { position: fixed; bottom: 25px; right: 25px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: var(--card-bg); color: var(--text-main); padding: 14px 20px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 10px; min-width: 280px; border-left: 4px solid var(--primary); font-size: 0.9rem; animation: slideIn 0.3s ease; }
+        .toast.error { border-color: var(--error); }
+        .toast.success { border-color: var(--success); }
+        .toast.warning { border-color: var(--warning); }
+
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Mention Dropdown */
+        .mention-dropdown { position: absolute; bottom: 60px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; max-height: 150px; overflow-y: auto; width: 200px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 10; }
+        .mention-item { padding: 8px 12px; cursor: pointer; font-size: 0.85rem; }
+        .mention-item:hover { background: var(--primary); color: white; }
 
         /* Responsive */
         @media (max-width: 768px) {
-            :root { --sidebar-width: 280px; }
-            nav { padding: 0.8rem 1rem; }
-            .dashboard { padding: 15px; margin: 10px auto; }
-            .auth-container { margin: 20px auto; padding: 20px; }
+            .drawer { width: 100%; }
+            .auth-container { margin: 20px; padding: 25px; }
+            .ws-header-card { flex-direction: column; align-items: flex-start; }
         }
-
-        /* Navigation */
-        nav { background: var(--card-bg); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; }
-        .logo-container { display: flex; align-items: center; gap: 15px; }
-        .hamburger-btn { font-size: 1.3rem; cursor: pointer; color: var(--text-main); padding: 5px; }
-        .logo { font-size: 1.4rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-
-        /* Sidebar & Drawers */
-        .sidebar, .drawer { position: fixed; top: 0; height: 100%; background: var(--card-bg); box-shadow: 5px 0 25px rgba(0,0,0,0.15); z-index: 1001; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 25px 20px; overflow-y: auto; }
-        .sidebar { left: 0; width: var(--sidebar-width); transform: translateX(-100%); }
-        .sidebar.active { transform: translateX(0); }
-        
-        .drawer-right { right: 0; width: 400px; max-width: 100%; transform: translateX(100%); }
-        .drawer-right.active { transform: translateX(0); }
-
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); opacity: 0; visibility: hidden; transition: 0.3s; z-index: 1000; backdrop-filter: blur(2px); }
-        .overlay.active { opacity: 1; visibility: visible; }
-
-        .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
-        .close-btn { font-size: 1.4rem; cursor: pointer; color: var(--text-muted); }
-
-        /* Auth Container */
-        .auth-container { max-width: 420px; margin: 60px auto; padding: 35px; background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .input-group { margin-bottom: 18px; text-align: left; }
-        .input-group label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.88rem; color: var(--text-muted); }
-        input, textarea, select { width: 100%; padding: 11px 14px; border: 1px solid var(--border-color); border-radius: 8px; outline: none; transition: 0.2s; background: var(--card-bg); color: var(--text-main); font-size: 0.95rem; }
-        input:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
-
-        /* Dashboard & Workspace */
-        .dashboard { max-width: 1100px; margin: 20px auto; padding: 0 20px; }
-        .workspace-card { background: var(--card-bg); border: 1px solid var(--border-color); padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-        
-        .section-box { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 25px; }
-        .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-
-        /* Badges & Avatars */
-        .premium-badge { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px; }
-        .creator-tag { background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin-left: 5px; }
-        .admin-tag { background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin-left: 5px; }
-        
-        .avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: #cbd5e1; display: inline-block; vertical-align: middle; }
-        .avatar-lg { width: 80px; height: 80px; }
-
-        /* Lists & Items */
-        .list-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border-color); }
-        .list-item:last-child { border-bottom: none; }
-
-        /* Chat & Logs */
-        .chat-box { max-height: 400px; overflow-y: auto; padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 15px; background: rgba(0,0,0,0.02); }
-        .chat-msg { margin-bottom: 15px; display: flex; gap: 12px; align-items: flex-start; }
-        .msg-content { background: var(--card-bg); border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 10px; max-width: 80%; }
-        .mention-highlight { background: rgba(37, 99, 235, 0.15); color: var(--primary); padding: 2px 4px; border-radius: 4px; font-weight: 600; }
-
-        /* Toasts */
-        #toast-container { position: fixed; bottom: 25px; right: 25px; z-index: 9999; }
-        .toast { background: var(--card-bg); color: var(--text-main); padding: 14px 20px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); margin-top: 10px; display: flex; align-items: center; gap: 12px; border-left: 4px solid var(--primary); font-size: 0.9rem; animation: slideIn 0.3s ease; }
-
-        /* Modal / Privacy Policy */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(3px); }
-        .modal-body { background: var(--card-bg); padding: 25px; border-radius: 16px; max-width: 500px; width: 90%; max-height: 85vh; overflow-y: auto; }
-        .policy-scroll { max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; margin: 15px 0; font-size: 0.85rem; color: var(--text-muted); }
-
-        /* Animations */
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-        .fade-in { animation: fadeIn 0.3s ease forwards; }
-
-        .switch { position: relative; display: inline-block; width: 46px; height: 24px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--primary); }
-        input:checked + .slider:before { transform: translateX(22px); }
     </style>
 </head>
 <body>
 
     <div id="toast-container"></div>
 
-    <!-- Navigation -->
     <nav>
         <div class="logo-container">
-            <i class="fas fa-bars hamburger-btn" onclick="toggleSidebar()"></i>
+            <i class="fas fa-bars hamburger-btn hidden" id="hamburger-btn" onclick="toggleSidebar()"></i>
             <div class="logo"><i class="fas fa-code-branch"></i> DevBand</div>
         </div>
-        <div id="nav-right" class="hidden">
-            <span id="nav-user-name" style="font-weight: 600; margin-right: 10px;"></span>
-            <img id="nav-user-avatar" class="avatar" src="https://via.placeholder.com/36" alt="Profile">
+        <div id="nav-user" class="hidden" style="display: flex; align-items: center; gap: 12px;">
+            <span id="user-display-name" style="font-weight: 600; font-size: 0.9rem;"></span>
+            <img id="user-nav-avatar" src="" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #cbd5e1; display: none;">
+            <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="logout()">Logout</button>
         </div>
     </nav>
 
-    <!-- Sidebar Overlay -->
-    <div class="overlay" id="overlay" onclick="closeAllDrawers()"></div>
-
-    <!-- Main Sidebar -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div class="sidebar" id="sidebar">
-        <h3 style="margin-bottom: 20px;"><i class="fas fa-layer-group"></i> <span class="lang-term" data-simple="Workspace Hub" data-tech="Workspace Cluster Context">Workspace Hub</span></h3>
-        <button class="btn btn-primary" style="margin-bottom: 10px;" onclick="openDrawer('create-workspace-drawer')"><i class="fas fa-plus"></i> <span class="lang-term" data-simple="Create Workspace" data-tech="Initialize Instance">Create Workspace</span></button>
-        <button class="btn btn-secondary" style="width: 100%; margin-bottom: 20px;" onclick="openDrawer('join-workspace-drawer')"><i class="fas fa-sign-in-alt"></i> <span class="lang-term" data-simple="Join Workspace" data-tech="Join Peer Node">Join Workspace</span></button>
-        
-        <div style="margin-bottom: 20px;">
-            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);"><span class="lang-term" data-simple="MY WORKSPACES" data-tech="ACTIVE INSTANCES">MY WORKSPACES</span></label>
-            <div id="sidebar-workspaces-list" style="margin-top: 8px;"></div>
+        <div class="sidebar-header">
+            <h3>DevBand Menu</h3>
+            <i class="fas fa-times" style="cursor: pointer;" onclick="toggleSidebar()"></i>
         </div>
-        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
         
-        <button class="btn btn-secondary" style="width: 100%; margin-bottom: 10px; justify-content: flex-start;" onclick="openDrawer('profile-drawer')"><i class="fas fa-user-circle"></i> <span class="lang-term" data-simple="My Profile" data-tech="Entity Metadata">My Profile</span></button>
-        <button class="btn btn-secondary" style="width: 100%; margin-bottom: 10px; justify-content: flex-start;" onclick="openDrawer('add-friend-drawer')"><i class="fas fa-user-plus"></i> <span class="lang-term" data-simple="Add Friend" data-tech="Establish Peer Link">Add Friend</span></button>
-        <button class="btn btn-secondary" style="width: 100%; margin-bottom: 10px; justify-content: flex-start;" onclick="openDrawer('friend-requests-drawer')">
-            <i class="fas fa-user-clock"></i> <span class="lang-term" data-simple="Friend Requests" data-tech="Inbound Handshakes">Friend Requests</span>
-            <span id="pending-count-badge" style="background: var(--primary); color: white; border-radius: 10px; padding: 2px 6px; font-size: 0.75rem; margin-left: auto;" class="hidden">0</span>
-        </button>
-        <button class="btn btn-secondary" style="width: 100%; margin-bottom: 10px; justify-content: flex-start;" onclick="openDrawer('friend-list-drawer')"><i class="fas fa-users"></i> <span class="lang-term" data-simple="Friend List" data-tech="Peer Directory">Friend List</span></button>
-        <button class="btn btn-secondary" style="width: 100%; margin-bottom: 10px; justify-content: flex-start;" onclick="openDrawer('redeem-drawer')"><i class="fas fa-gift"></i> <span class="lang-term" data-simple="Redeem Code" data-tech="License Activation">Redeem Code</span></button>
-        <button class="btn btn-secondary" style="width: 100%; margin-bottom: 20px; justify-content: flex-start;" onclick="openDrawer('settings-drawer')"><i class="fas fa-cog"></i> <span class="lang-term" data-simple="Settings" data-tech="Configuration Flags">Settings</span></button>
-        
-        <button class="btn btn-danger" style="width: 100%; margin-top: 10px;" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> <span class="lang-term" data-simple="Logout" data-tech="Terminate Session">Logout</span></button>
+        <div class="sidebar-menu">
+            <div class="sidebar-item" onclick="openDrawer('create-ws-drawer')"><i class="fas fa-plus-circle"></i> <span class="lang-term" data-simple="Create Workspace" data-tech="Initialize Repo/Workspace">Create Workspace</span></div>
+            <div class="sidebar-item" onclick="openDrawer('join-ws-drawer')"><i class="fas fa-sign-in-alt"></i> <span class="lang-term" data-simple="Join Workspace" data-tech="Attach Remote Endpoint">Join Workspace</span></div>
+            <div class="sidebar-item" onclick="openDrawer('my-profile-drawer')"><i class="fas fa-user-gear"></i> My Profile</div>
+            <div class="sidebar-item" onclick="openDrawer('friends-drawer')"><i class="fas fa-users"></i> Friends & Requests</div>
+            <div class="sidebar-item" onclick="openDrawer('redeem-drawer')"><i class="fas fa-gift"></i> Redeem Code</div>
+            <div class="sidebar-item" onclick="openDrawer('settings-drawer')"><i class="fas fa-sliders"></i> Settings</div>
+        </div>
+
+        <div class="workspaces-section">
+            <h4 style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase;">My Workspaces</h4>
+            <div class="workspace-list" id="sidebar-ws-list">
+                </div>
+        </div>
     </div>
 
-    <!-- BAN SCREEN MODAL -->
-    <div id="ban-screen" class="modal hidden">
-        <div class="modal-body" style="text-align: center;">
+    <div id="ban-screen" class="modal-overlay hidden">
+        <div class="modal-card" style="text-align: center;">
             <i class="fas fa-ban" style="font-size: 3.5rem; color: var(--error); margin-bottom: 15px;"></i>
-            <h2>Account Banned</h2>
-            <p style="margin: 10px 0; color: var(--text-muted);">Your account has been restricted from accessing DevBand.</p>
-            <p id="ban-time-remaining" style="font-weight: 700; color: var(--error); margin-bottom: 15px;"></p>
-            <div id="ban-evidence-container" style="margin-bottom: 15px;"></div>
+            <h2>Account Suspended</h2>
+            <p style="margin: 15px 0; color: var(--text-muted);">You have been restricted from accessing DevBand.</p>
+            <div id="ban-time-left" style="font-size: 1.1rem; font-weight: bold; color: var(--error); margin-bottom: 15px;"></div>
+            <div id="ban-evidence-container" style="margin-bottom: 20px;"></div>
             <a href="https://fast-bot-official.github.io/FluxionarySupport//" target="_blank" class="btn btn-primary" style="text-decoration: none;">Submit Appeal</a>
-            <button class="btn btn-secondary" style="width: 100%; margin-top: 10px;" onclick="handleLogout()">Logout</button>
+            <button class="btn btn-secondary" onclick="logout()" style="margin-top: 10px; width: 100%;">Logout</button>
         </div>
     </div>
 
-    <!-- PRIVACY POLICY MODAL -->
-    <div id="privacy-modal" class="modal hidden">
-        <div class="modal-body">
-            <h3>Privacy Policy Agreement</h3>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">Please read and accept our policies to continue using DevBand.</p>
-            <div class="policy-scroll" id="policy-text" onscroll="handlePolicyScroll(this)">
-                <p><strong>1. Data Collection:</strong> We collect your email address, display name, profile pictures, team communications, shared project files, activity logs, and technical preferences to deliver real-time collaboration features.</p><br>
-                <p><strong>2. File Processing:</strong> Uploaded media and attachments are processed via Cloudinary services to provide unified storage across team instances.</p><br>
-                <p><strong>3. Usage Limits:</strong> Standard files are restricted to designated parameters unless upgraded via license keys. Workspaces hold up to 100 entities max.</p><br>
-                <p><strong>4. Moderation & Bans:</strong> System administrators reserve full authority to restrict access for policy violations or improper behavior.</p>
+    <div id="privacy-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h2>Privacy Policy & Terms</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Please read entirely to proceed.</p>
+            
+            <div id="privacy-scroll-box" style="height: 200px; overflow-y: auto; border: 1px solid var(--border); padding: 15px; border-radius: 8px; font-size: 0.85rem; background: var(--bg); margin-bottom: 15px;">
+                <p><strong>1. Information Collection:</strong> We collect display names, bio descriptions, email addresses, uploaded project files, logs, and communication data created within DevBand workspaces.</p><br>
+                <p><strong>2. Usage:</strong> Your data is used exclusively to facilitate real-time project collaboration, workspace security, member moderation, and friends messaging.</p><br>
+                <p><strong>3. Media Uploads:</strong> Files and images are transmitted securely to Cloudinary storage buckets under strict size parameters.</p><br>
+                <p><strong>4. Workspace Governance:</strong> Workspace admins hold administrative privileges over project content and membership directory within their workspaces.</p><br>
+                <p>Please scroll to the absolute bottom of this policy statement to enable acceptance and continue into DevBand software.</p>
             </div>
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                <input type="checkbox" id="policy-checkbox" disabled style="width: auto;">
-                <label for="policy-checkbox" style="font-size: 0.85rem;">I agree to the privacy policy and I have read everything stated</label>
+
+            <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="privacy-check" disabled>
+                <label for="privacy-check" style="font-size: 0.85rem;">I agree to the privacy policy and I have read everything stated</label>
             </div>
-            <button id="policy-continue-btn" class="btn btn-primary" disabled onclick="completePrivacyPolicy()">Continue</button>
+
+            <button id="privacy-continue-btn" class="btn btn-primary" disabled onclick="acceptPrivacyPolicy()">Continue</button>
         </div>
     </div>
 
-    <!-- AUTH SECTION -->
-    <div id="auth-section" class="auth-container fade-in">
-        <h2 id="auth-title" style="text-align: center; margin-bottom: 20px;">Welcome Back</h2>
+    <div id="mandatory-profile-drawer" class="drawer" style="z-index: 2005;">
+        <div class="drawer-header">
+            <h3>Complete Your Profile</h3>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">Please configure your initial details before accessing the workspace platform.</p>
+        
         <div class="input-group">
-            <label>Email Address</label>
-            <input type="email" id="auth-email" placeholder="dev@company.com">
-        </div>
-        <div class="input-group">
-            <label>Password</label>
-            <input type="password" id="auth-password" placeholder="••••••••">
-        </div>
-        <button id="auth-submit-btn" class="btn btn-primary" onclick="handleEmailAuth()">Sign In</button>
-        <div style="text-align: center; margin-top: 10px;">
-            <a href="#" id="forgot-password-btn" onclick="handleForgotPassword()" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">Forgot password?</a>
-        </div>
-        <button class="btn google-btn" onclick="handleGoogleAuth()"><i class="fab fa-google"></i> Continue with Google</button>
-        <p style="text-align: center; margin-top: 20px; color: var(--text-muted); font-size: 0.9rem;">
-            <span id="auth-toggle-text">New to the app?</span> 
-            <a href="#" id="auth-toggle-link" onclick="toggleAuthPage()" style="color: var(--primary); text-decoration: none; font-weight: 600;">Signup now</a>
-        </p>
-    </div>
-
-    <!-- VERIFICATION SCREEN -->
-    <div id="verify-section" class="auth-container hidden fade-in" style="text-align: center;">
-        <i class="fas fa-paper-plane" style="font-size: 3rem; color: var(--primary); margin-bottom: 15px;"></i>
-        <h2>Verify Your Email</h2>
-        <p style="color: var(--text-muted); margin: 15px 0; font-size: 0.9rem;">We sent a verification email. Please check your inbox.</p>
-        <div style="background: rgba(245, 158, 11, 0.1); border-left: 3px solid var(--warning); padding: 10px; text-align: left; font-size: 0.8rem; margin-bottom: 20px; border-radius: 4px;">
-            <strong>Notice:</strong> If you can't find the email in your inbox, please check your <strong>Spam</strong> section, and if possible, report <strong>"Not spam"</strong>.
-        </div>
-        <button id="resend-verify-btn" class="btn btn-secondary" style="width: 100%; margin-bottom: 10px;" onclick="resendVerificationEmail()">Resend Verification Email</button>
-        <button class="btn btn-primary" style="margin-bottom: 10px;" onclick="checkVerificationStatus()">I have verified</button>
-        <button class="btn btn-danger" style="width: 100%;" onclick="handleLogout()">Logout</button>
-    </div>
-
-    <!-- COMPLETE PROFILE DRAWER (COMPULSORY) -->
-    <div id="complete-profile-drawer" class="drawer drawer-right">
-        <h3>Complete Your Profile</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">Setup your initial entity parameters before accessing dashboard.</p>
-        <div class="input-group" style="text-align: center;">
-            <img id="setup-avatar-preview" class="avatar avatar-lg" src="https://via.placeholder.com/80" alt="Preview" style="margin-bottom: 10px;">
-            <input type="file" id="setup-avatar-file" accept="image/*" onchange="previewImage(this, 'setup-avatar-preview')">
-            <small style="color: var(--text-muted); display: block; margin-top: 4px;">Optional profile picture (Max limit applied)</small>
+            <label>Profile Picture (Optional, Max 5MB)</label>
+            <input type="file" id="init-avatar-input" accept="image/*">
         </div>
         <div class="input-group">
-            <label>Display Name (3-10 chars)</label>
-            <input type="text" id="setup-display-name" maxlength="10" placeholder="Coder123">
+            <label>Display Name (3 to 10 characters)</label>
+            <input type="text" id="init-display-name" placeholder="DevName">
         </div>
         <div class="input-group">
             <label>Bio Description</label>
-            <textarea id="setup-bio" rows="3" placeholder="Full-stack engineer building DevBand..."></textarea>
+            <textarea id="init-bio" rows="3" placeholder="Tell us about your tech stack..."></textarea>
         </div>
         <button class="btn btn-primary" onclick="saveInitialProfile()">Save Details</button>
     </div>
 
-    <!-- MAIN DASHBOARD AREA -->
-    <div id="main-dashboard" class="dashboard hidden fade-in">
-        <!-- NO WORKSPACE SELECTED STATE -->
-        <div id="no-workspace-state" class="workspace-card" style="text-align: center; padding: 50px 20px;">
-            <i class="fas fa-folder-open" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 15px;"></i>
-            <h2>No workspaces selected</h2>
-            <p style="color: var(--text-muted); margin-top: 8px;">Select an existing workspace from the sidebar menu, or create/join a new cluster instance to collaborate with peers.</p>
+    <div id="auth-section">
+        <div id="login-card" class="auth-container">
+            <h2 style="text-align: center; margin-bottom: 20px;">Welcome Back</h2>
+            <div class="input-group">
+                <label>Email Address</label>
+                <input type="email" id="login-email" placeholder="dev@band.io">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="login-password" placeholder="••••••••">
+            </div>
+            <button class="btn btn-primary" onclick="handleEmailLogin()">Sign In</button>
+            <div style="text-align: center; margin-top: 12px;">
+                <a href="#" onclick="handleForgotPassword()" style="color: var(--text-muted); font-size: 0.85rem; text-decoration: none;">Forgot password?</a>
+            </div>
+            <button class="btn google-btn" onclick="handleGoogleAuth()">
+                <i class="fab fa-google" style="color: #ea4335;"></i> Continue with Google
+            </button>
+            <p style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: var(--text-muted);">
+                New to the app? <a href="#" onclick="toggleAuthView('signup')" style="color: var(--primary); font-weight: 600; text-decoration: none;">Signup now</a>
+            </p>
         </div>
 
-        <!-- WORKSPACE VIEW -->
-        <div id="active-workspace-state" class="hidden">
-            <div class="workspace-card" style="position: relative;">
-                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <img id="ws-header-icon" class="avatar avatar-lg" src="https://via.placeholder.com/80" alt="WS Icon">
-                        <div>
-                            <h1 id="ws-header-title">Workspace Name</h1>
-                            <p style="font-size: 0.9rem; color: var(--text-muted);">PIN: <strong id="ws-header-pin" style="letter-spacing: 1px; color: var(--primary);">--------</strong></p>
-                        </div>
+        <div id="signup-card" class="auth-container hidden">
+            <h2 style="text-align: center; margin-bottom: 20px;">Create Account</h2>
+            <div class="input-group">
+                <label>Email Address</label>
+                <input type="email" id="signup-email" placeholder="dev@band.io">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="signup-password" placeholder="••••••••">
+            </div>
+            <button class="btn btn-primary" onclick="handleEmailSignup()">Sign Up</button>
+            <button class="btn google-btn" onclick="handleGoogleAuth()">
+                <i class="fab fa-google" style="color: #ea4335;"></i> Continue with Google
+            </button>
+            <p style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: var(--text-muted);">
+                Already have an account? <a href="#" onclick="toggleAuthView('login')" style="color: var(--primary); font-weight: 600; text-decoration: none;">Login instead</a>
+            </p>
+        </div>
+
+        <div id="verify-card" class="auth-container hidden" style="text-align: center;">
+            <i class="fas fa-envelope-circle-check" style="font-size: 3.5rem; color: var(--primary); margin-bottom: 20px;"></i>
+            <h2>Verify Email</h2>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin: 15px 0;">We have dispatched a verification email to your address.</p>
+            <p style="font-size: 0.8rem; background: #fff7ed; color: #c2410c; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
+                <i class="fas fa-triangle-exclamation"></i> If you can't find the email in your inbox, check the <strong>Spam</strong> section and report "Not Spam".
+            </p>
+            <button id="resend-email-btn" class="btn btn-secondary" style="width: 100%; margin-bottom: 10px;" onclick="resendVerificationEmail()">Resend Verification Email</button>
+            <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="checkVerificationStatus()">I Have Verified</button>
+            <button class="btn btn-danger" style="width: 100%;" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div id="main-dashboard" class="dashboard hidden">
+        <div id="empty-ws-view" class="empty-dashboard">
+            <i class="fas fa-cubes" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 20px;"></i>
+            <h2>No Workspaces Selected</h2>
+            <p style="color: var(--text-muted); margin-top: 10px; max-width: 450px; margin-left: auto; margin-right: auto;">
+                Select a workspace from the sidebar menu, create a new software workspace, or join one via an 8-digit PIN code.
+            </p>
+        </div>
+
+        <div id="active-ws-view" class="hidden">
+            <div class="ws-header-card">
+                <div class="ws-title-area">
+                    <div id="ws-display-icon" class="ws-main-img">W</div>
+                    <div>
+                        <h2 id="ws-display-name">Workspace Name</h2>
+                        <div>Workspace PIN: <span id="ws-display-pin" class="pin-badge">00000000</span></div>
                     </div>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button class="btn btn-secondary" onclick="generateQRModal()"><i class="fas fa-qrcode"></i> Invite QR</button>
-                        <button class="btn btn-secondary" onclick="copyInviteLink()"><i class="fas fa-link"></i> Invite Link</button>
-                        <button id="ws-config-btn" class="btn btn-primary hidden" onclick="openDrawer('config-workspace-drawer')"><i class="fas fa-sliders-h"></i> Configure Workspace</button>
-                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <button class="btn btn-secondary" onclick="openQrModal()"><i class="fas fa-qrcode"></i> Invite QR</button>
+                    <button class="btn btn-secondary" onclick="copyInviteLink()"><i class="fas fa-link"></i> Invite Link</button>
+                    <button id="configure-ws-btn" class="btn btn-primary hidden" onclick="openDrawer('configure-ws-drawer')"><i class="fas fa-gear"></i> Configure Workspace</button>
                 </div>
             </div>
 
-            <!-- REALTIME COLLABORATIVE TASKS -->
-            <div class="section-box">
+            <div class="section-card">
                 <div class="section-title">
-                    <span><i class="fas fa-tasks"></i> <span class="lang-term" data-simple="Collaborative Tasks" data-tech="Task Concurrent Queue">Collaborative Tasks</span></span>
+                    <span><i class="fas fa-list-check"></i> <span class="lang-term" data-simple="Realtime Collaborative Tasks" data-tech="Synchronous Task Queue Engine">Realtime Collaborative Tasks</span></span>
                 </div>
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <input type="text" id="new-task-input" placeholder="Enter task title...">
-                    <button class="btn btn-primary" style="width: auto;" onclick="addWorkspaceTask()">Add</button>
+                    <input type="text" id="new-task-input" placeholder="Add task description...">
+                    <input type="date" id="new-task-date" style="width: 160px;">
+                    <button class="btn btn-primary" style="width: auto;" onclick="addWorkspaceTask()"><i class="fas fa-plus"></i></button>
                 </div>
-                <div id="tasks-list-container"></div>
+                <div id="tasks-container"></div>
             </div>
 
-            <!-- MEMBER DIRECTORY -->
-            <div class="section-box">
+            <div class="section-card">
                 <div class="section-title">
-                    <span><i class="fas fa-address-book"></i> <span class="lang-term" data-simple="Member Directory" data-tech="Member Registry Cache">Member Directory</span></span>
+                    <span><i class="fas fa-users-viewfinder"></i> Member Directory</span>
+                    <input type="text" id="search-member-input" placeholder="Search by name or UID..." style="width: 220px; font-size: 0.85rem;" oninput="renderMemberDirectory()">
                 </div>
-                <input type="text" id="member-search-input" placeholder="Search members by Display Name or UID..." oninput="renderMemberDirectory()" style="margin-bottom: 15px;">
-                <div id="members-list-container"></div>
+                <div id="member-directory-grid" class="member-grid"></div>
             </div>
 
-            <!-- PROJECT SHARES -->
-            <div class="section-box">
+            <div class="section-card">
                 <div class="section-title">
-                    <span><i class="fas fa-folder-plus"></i> <span class="lang-term" data-simple="Project Shares" data-tech="Shared Repository Attachments">Project Shares</span></span>
-                    <button class="btn btn-primary" style="width: auto; font-size: 0.8rem;" onclick="triggerProjectFileUpload()">Add project to share with team</button>
-                    <input type="file" id="project-file-input" class="hidden" onchange="uploadProjectFile(this)">
+                    <span><i class="fas fa-folder-open"></i> Project Shares</span>
+                    <button class="btn btn-primary" style="width: auto; font-size: 0.8rem;" onclick="triggerProjectFileUpload()"><i class="fas fa-upload"></i> Add project to share with team</button>
+                    <input type="file" id="project-file-input" class="hidden" onchange="uploadProjectFile(event)">
                 </div>
-                <div id="project-shares-container"></div>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Maximum file limit: 100MB per file.</p>
+                
+                <div id="project-upload-progress" class="hidden" style="margin-bottom: 15px;">
+                    <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>Uploading file to Cloudinary...</span>
+                        <span id="project-upload-pct">0%</span>
+                    </div>
+                    <div style="width: 100%; background: var(--border); height: 8px; border-radius: 4px; overflow: hidden;">
+                        <div id="project-upload-bar" style="width: 0%; height: 100%; background: var(--primary); transition: width 0.1s;"></div>
+                    </div>
+                </div>
+
+                <div id="project-shares-list"></div>
             </div>
 
-            <!-- ACTIVITY LOGS -->
-            <div class="section-box">
+            <div class="section-card">
                 <div class="section-title">
-                    <span><i class="fas fa-history"></i> <span class="lang-term" data-simple="Activity Logs" data-tech="Audit Event Logs">Activity Logs</span></span>
+                    <span><i class="fas fa-file-code"></i> Create project file</span>
+                    <button class="btn btn-primary" style="width: auto; font-size: 0.8rem;" onclick="openDrawer('create-code-file-drawer')"><i class="fas fa-plus"></i> Create project file</button>
                 </div>
-                <div id="activity-logs-container" style="max-height: 200px; overflow-y: auto; font-size: 0.85rem;"></div>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px;">Create, edit, and view in-app software code files with up to 50 million lines allowed per file.</p>
+                <div id="project-code-files-list"></div>
             </div>
 
-            <!-- BUG LOGS -->
-            <div class="section-box">
+            <div class="section-card">
+                <div class="section-title"><i class="fas fa-clock-rotate-left"></i> Activity Logs</div>
+                <div id="activity-logs-list" style="max-height: 180px; overflow-y: auto; font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px;"></div>
+            </div>
+
+            <div class="section-card">
                 <div class="section-title">
-                    <span><i class="fas fa-bug"></i> <span class="lang-term" data-simple="Bug Logs" data-tech="Issue Reporting Registry">Bug Logs</span></span>
+                    <span><i class="fas fa-bug"></i> <span class="lang-term" data-simple="Bug Logs" data-tech="Issue Tracker & Telemetry">Bug Logs</span></span>
                     <button class="btn btn-danger" style="width: auto; font-size: 0.8rem;" onclick="openDrawer('create-bug-drawer')">Create bug report</button>
                 </div>
-                <div id="bug-logs-container"></div>
+                <div id="bug-logs-list"></div>
             </div>
 
-            <!-- TEAM COMMUNICATIONS -->
-            <div class="section-box">
-                <div class="section-title">
-                    <span><i class="fas fa-comments"></i> <span class="lang-term" data-simple="Team Communications" data-tech="Real-time Socket Messages">Team Communications</span></span>
-                </div>
+            <div class="section-card" style="position: relative;">
+                <div class="section-title"><i class="fas fa-comments"></i> Team Communications</div>
+                
                 <div class="chat-box" id="team-chat-box"></div>
                 
-                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
-                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="document.getElementById('chat-file-input').click()"><i class="fas fa-paperclip"></i> File</button>
-                    <button id="voice-record-btn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="toggleVoiceRecording()"><i class="fas fa-microphone"></i> Voice Note</button>
-                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="triggerCameraCapture()"><i class="fas fa-camera"></i> Camera</button>
-                    <input type="file" id="chat-file-input" class="hidden" onchange="uploadChatFile(this)">
-                    <input type="file" id="chat-camera-input" class="hidden" accept="image/*,video/*" capture="environment" onchange="uploadChatFile(this)">
-                </div>
-                <div style="display: flex; gap: 8px; position: relative;">
-                    <input type="text" id="chat-msg-input" placeholder="Type message... (Use @ to mention members)" oninput="handleChatTyping(this)" onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                <div id="mention-dropdown" class="mention-dropdown hidden"></div>
+
+                <div class="chat-input-area">
+                    <input type="text" id="chat-msg-input" placeholder="Type message... (Use @ to mention)" style="flex: 1;" oninput="handleChatTyping(event)">
+                    
+                    <button class="btn btn-secondary" title="Attach Image" onclick="document.getElementById('chat-file-image').click()"><i class="fas fa-image"></i></button>
+                    <button class="btn btn-secondary" title="Attach File" onclick="document.getElementById('chat-file-any').click()"><i class="fas fa-paperclip"></i></button>
+                    <button class="btn btn-secondary" title="Record Voice Note" id="voice-record-btn" onclick="toggleVoiceRecord()"><i class="fas fa-microphone"></i></button>
+                    <button class="btn btn-secondary" title="Camera Capture" onclick="captureCameraMedia()"><i class="fas fa-camera"></i></button>
+                    
                     <button class="btn btn-primary" style="width: auto;" onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
-                    <div id="mention-dropdown" class="drawer hidden" style="position: absolute; bottom: 100%; left: 0; width: 250px; max-height: 150px; overflow-y: auto; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 5px; z-index: 10;"></div>
+
+                    <input type="file" id="chat-file-image" accept="image/*" class="hidden" onchange="uploadChatAttachment(event, 'image')">
+                    <input type="file" id="chat-file-any" class="hidden" onchange="uploadChatAttachment(event, 'file')">
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- DRAWERS & MODALS -->
+    <div id="create-code-file-drawer" class="drawer">
+        <div class="drawer-header">
+            <h3>Create Project File</h3>
+            <i class="fas fa-times" style="cursor: pointer;" onclick="closeDrawer('create-code-file-drawer')"></i>
+        </div>
+        <div class="input-group">
+            <label>File Name (e.g. main.js, index.html, App.py)</label>
+            <input type="text" id="create-code-filename" placeholder="filename.js">
+        </div>
+        <button class="btn btn-primary" onclick="submitCreateCodeFile()">Save</button>
+    </div>
 
-    <!-- CREATE WORKSPACE DRAWER -->
-    <div id="create-workspace-drawer" class="drawer drawer-right">
+    <div id="code-editor-drawer" class="drawer" style="width: 550px; max-width: 100%;">
+        <div class="drawer-header">
+            <h3 id="code-editor-title">Start Coding</h3>
+            <i class="fas fa-times" style="cursor: pointer;" onclick="closeCodeEditorDrawer()"></i>
+        </div>
+        <div id="editor-online-status" style="font-size: 0.8rem; color: var(--success); margin-bottom: 10px; font-weight: 600;"></div>
+        <div class="input-group" style="flex: 1; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label style="margin: 0;">File Source Code</label>
+                <span id="code-editor-lines" style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">Lines: 1 / 50,000,000</span>
+            </div>
+            <textarea id="code-editor-content" style="flex: 1; min-height: 380px; font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.4; white-space: pre; tab-size: 4;" oninput="updateEditorLineCount()"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="saveCodeFileContent()" style="margin-top: 15px;">Save Code</button>
+    </div>
+
+    <div id="view-file-modal" class="modal-overlay hidden">
+        <div class="modal-card" style="max-width: 650px; width: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 id="view-file-title">View File Contents</h3>
+                <i class="fas fa-times" style="cursor: pointer;" onclick="closeViewFileModal()"></i>
+            </div>
+            <div id="view-file-live-indicator" style="font-size: 0.8rem; color: var(--warning); margin-bottom: 10px; font-weight: 600;"></div>
+            <pre id="view-file-content-pre" style="background: var(--bg); border: 1px solid var(--border); padding: 15px; border-radius: 8px; max-height: 400px; overflow: auto; font-family: 'Fira Code', monospace; font-size: 0.85rem; white-space: pre-wrap; word-break: break-all;"></pre>
+            <button class="btn btn-secondary" style="margin-top: 15px; width: 100%;" onclick="closeViewFileModal()">Close</button>
+        </div>
+    </div>
+
+    <div id="create-ws-drawer" class="drawer">
         <div class="drawer-header">
             <h3>Create Workspace</h3>
-            <i class="fas fa-times close-btn" onclick="closeAllDrawers()"></i>
+            <i class="fas fa-times" style="cursor: pointer;" onclick="closeDrawer('create-ws-drawer')"></i>
         </div>
         <div class="input-group">
             <label>Workspace Name</label>
-            <input type="text" id="create-ws-name" placeholder="Engineering Team">
+            <input type="text" id="create-ws-name" placeholder="e.g. Core Engine Dev">
         </div>
         <div class="input-group">
-            <label>Workspace Icon (Optional, Max Limit Applies)</label>
+            <label>Workspace Icon (Optional, Max 8MB)</label>
             <input type="file" id="create-ws-icon" accept="image/*">
         </div>
-        <button class="btn btn-primary" onclick="submitCreateWorkspace()">Create workspace</button>
+        <button class="btn btn-primary" onclick="submitCreateWorkspace()">Create Workspace</button>
     </div>
 
-    <!-- JOIN WORKSPACE DRAWER -->
-    <div id="join-workspace-drawer" class="drawer drawer-right">
+    <div id="join-ws-drawer" class="drawer">
         <div class="drawer-header">
             <h3>Join Workspace</h3>
-            <i class="fas fa-times close-btn" onclick="closeAllDrawers()"></i>
+            <i class="fas fa-times" style="cursor: pointer;" onclick="closeDrawer('join-ws-drawer')"></i>
         </div>
         <div class="input-group">
-            <label>8-Digit Workspace PIN</label>
-            <input type="text" id="join-ws-pin" placeholder="12345678" maxlength="8">
+            <label>Enter 8-Digit Workspace PIN</label>
+            <input type="text" id="join-ws-pin" maxlength="8" placeholder="12345678">
         </div>
-        <button class="btn btn-primary" onclick="submitJoinWorkspace()">Join workspace</button>
+        <button class="btn btn-primary" onclick="submitJoinWorkspace()">Join Workspace</button>
     </div>
 
-    <!-- CONFIGURE WORKSPACE DRAWER -->
-    <div id="config-workspace-drawer" class="drawer drawer-right">
+    <div id="configure-ws-drawer" class="drawer">
         <div class="drawer-header">
             <h3>Configure Workspace</h3>
-            <i class="fas fa-times close-btn" onclick="closeAllDrawers()"></i>
+            <i class="fas fa-times" style="cursor: pointer;" onclick="closeDrawer('configure-ws-drawer')"></i>
         </div>
         <div class="input-group">
             <label>Workspace Name</label>
-            <input type="text" id="config-ws-name">
+            <input type="text" id="cfg-ws-name">
         </div>
         <div class="input-group">
-            <label>Update Icon</label>
-            <input type="file" id="config-ws-icon" accept="image/*">
+            <label>Workspace Icon (Max 8MB)</label>
+            <input type="file" id="cfg-ws-icon" accept="image/*">
         </div>
-        <div class="input-group" style="display: flex; align-items: center; justify-content: space-between;">
-            <label style="margin: 0;">Require Admin Approval to Join</label>
-            <label class="switch">
-                <input type="checkbox" id="config-ws-approval">
-                <span class="slider"></span>
-            </label>
+        <div style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+            <label style="font-size: 0.9rem; font-weight: 600;">Admin/Creator Approval to Join</label>
+            <input type="checkbox" id="cfg-ws-approval" style="width: 20px; height: 20px;">
         </div>
-        <button class="btn btn-primary" style="margin-top: 15px;" onclick="saveWorkspaceConfig()">Save Configuration</button>
-        
-        <div id="ws-join-requests-section" class="hidden" style="margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-            <h4>Request for joining workspace</h4>
-            <div id="join-requests-list" style="margin-top: 10px;"></div>
+        <button class="btn btn-primary" onclick="saveWorkspaceSettings()" style="margin-bottom: 15px;">Save Configurations</button>
+
+        <div id="join-requests-section" class="hidden" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
+            <h4>Requests for Joining Workspace</h4>
+            <div id="join-requests-list" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
 
-        <div style="margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px;">
-            <button class="btn btn-danger" style="width: 100%;" onclick="deleteWorkspacePermanently()">Delete Workspace Permanently</button>
+        <div style="margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px;">
+            <button class="btn btn-danger" onclick="deleteCurrentWorkspace()" style="width: 100%;">Delete Workspace Permanently</button>
         </div>
     </div>
 
-    <!-- EDIT PROFILE DRAWER -->
-    <div id="profile-drawer" class="drawer drawer-right">
+    <div id="my-profile-drawer" class="drawer">
         <div class="drawer-header">
-            <h3>Edit Profile</h3>
-            <i class="fas fa-times close-btn" onclick="closeAllDrawers()"></i>
+            <h3>My Profile</h3>
+            <i class="fas fa-times" style="cursor: pointer;" onclick="closeDrawer('my-profile-drawer')"></i>
         </div>
-        <div class="input-group" style="text-align: center;">
-            <img id="edit-profile-avatar-preview" class="avatar avatar-lg" src="https://via.placeholder.com/80" alt="Avatar">
-            <input type="file" id="edit-profile-avatar-file" accept="image/*" onchange="previewImage(this, 'edit-profile-avatar-preview')" style="margin-top: 8px;">
+        <div class="input-group">
+            <label>Profile Picture (Max 5MB / 10MB Premium)</label>
+            <input type="file" id="edit-avatar-input" accept="image/*">
         </div>
         <div class="input-group">
             <label>Display Name (3-10 chars)</label>
-            <input type="text" id="edit-profile-name" maxlength="10">
+            <input type="text" id="edit-display-name">
         </div>
         <div class="input-group">
             <label>Bio Description</label>
-            <textarea id="edit-profile-bio" rows="3"></textarea>
-        </div>
-        <div style="background: rgba(0,0,0,0.03); padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem;">
-            <div><strong>6-Digit Friend Code:</strong> <span id="profile-friend-code" style="letter-spacing: 1px; color: var(--primary); font-weight: 700;">------</span></div>
-            <div style="margin-top: 5px;"><strong>UID:</strong> <span id="profile-uid" style="color: var(--text-muted); font-size: 0.75rem;">------------------------</span></div>
-        </div>
-        <button class="btn btn-primary" onclick="saveEditedProfile()">Save Details</button>
-
-        <div style="margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 15px; font-size: 0.85rem;">
-            <strong>Premium Status:</strong>
-            <div id="premium-status-display" style="margin-top: 5px; color: var(--text-muted);">Free Plan</div>
-        </div>
-    </div>
-
-    <!-- ADD FRIEND DRAWER -->
-    <div id="add-friend-drawer" class="drawer drawer-right">
-        <div class="drawer-header">
-            <h3>Add Friend</h3>
-            <i class="fas fa-times close-btn" onclick="closeAllDrawers()"></i>
+            <textarea id="edit-bio" rows="3"></textarea>
         </div>
         <div class="input-group">
-            <label>Friend Code or UID</label>
-            <input type="text" id="add-friend-input" placeholder="Enter 6-digit code or UID">
-        </div>
-        <button class="btn btn-primary" onclick="submitFriendRequest()">Send Request</button>
-    </div>
-
-    <!-- FRIEND REQUESTS DRAWER -->
-    <div id="friend-requests-drawer" class="drawer drawer-right">
-        <div class="drawer-header">
-            <h3>Friend Requests (<span id="friend-requests-total">0</span>)</h3>
-            <i class="fas fa-times close-btn" onclick="closeAllDrawers()"></i>
-        </div>
-        <div id="friend-requests-list"></div>
-    </div>
-
-    <!-- FRIEND LIST DRAWER -->
-    <div id="friend-list-drawer" class="drawer drawer-right">
-        <div class="drawer-header">
-            <h3>Friend List</h3>
-            <i class="fas fa-times close-btn" onclick="closeAllDrawers()"></i>
-        </div>
-        <div id="friend-directory-list"></div>
-    </div>
-
-    <!-- DIRECT FRIEND CHAT DRAWER -->
-    <div id="friend-chat-drawer" class="drawer drawer-right">
-        <div class="drawer-header">
-            <h3 id="friend-chat-title">Chat with Friend</h3>
-            <i class="fas fa-times close-btn" onclick="closeAllDrawers()"></i>
-        </div>
-        <div class="chat-box" id="friend-chat-box" style="height: 350px;"></div>
-        <div style="display: flex; gap: 8px;">
-            <input type="text" id="friend-chat-input" placeholder="Type message..." onkeypress="if(event.key==='Enter') sendFriendMessage()">
-            <button class="btn btn-primary" style="width: auto;" onclick="sendFriendMessage()"><i class="fas fa-paper-plane"></i></button>
-        </div>
-    </div>
-
-    <!-- REDEEM CODE DRAWER -->
-    <div id="redeem-drawer" class="drawer drawer-right">
-        <div class="drawer-header">
-            <h3>Redeem License Code</h3>
-            <i class="fas fa-times close-btn" onclick="closeAllDrawers()"></i>
+            <label>6-Digit Friend Code (Unique)</label>
+            <input type="text" id="profile-friend-code" readonly style="font-family: monospace; font-weight: bold; background: rgba(0,0,0,0.05);">
         </div>
         <div class="input-group">
-            <label>License Key</label>
-            <input type="text" id="redeem-code-input" placeholder="DEV-PREMIUM-XXXX">
+            <label>User UID</label>
+            <input type="text" id="profile-uid" readonly style="font-family: monospace; font-size: 0.8rem; background: rgba(0,0,0,0.05);">
         </div>
-        <button class="btn btn-primary" onclick="submitRedeemCode()">Redeem Key</button>
+        <button class="btn btn-primary" onclick="saveProfileChanges()" style="margin-bottom: 20px;">Save Details</button>
+
+        <div id="premium-status-box" style="margin-top: auto; border-top: 1px solid var(--border); padding-top: 15px;">
+            <h4>Plan Status</h4>
+            <div id="plan-timer-display" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">Free Tier</div>
+        </div>
     </div>
 
-    <!-- SETTINGS DRAWER -->
-    <div id="settings-drawer" class="drawer drawer-right">
+    <div id="friends-drawer" class="drawer">
         <div class="drawer-header">
-            <i class="fas fa-times close-btn" onclick="closeAllDrawers()"></i>
+            <h3>Friends Network</h3>
+            <i class="fas fa-times" style="cursor: pointer;" onclick="closeDrawer('friends-drawer')"></i>
+        </div>
+        
+        <div style="border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 15px;">
+            <h4>Add Friend</h4>
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <input type="text" id="add-friend-code" placeholder="Enter 6-Digit Code or UID">
+                <button class="btn btn-primary" style="width: auto;" onclick="sendFriendRequest()">Send Request</button>
+            </div>
+        </div>
+
+        <div style="border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 15px;">
+            <h4>Friend Requests (<span id="pending-req-count">0</span>)</h4>
+            <div id="friend-requests-list" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
+        <div>
+            <h4>Friend List</h4>
+            <div id="friend-list-container" style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px;"></div>
+        </div>
+    </div>
+
+    <div id="redeem-drawer" class="drawer">
+        <div class="drawer-header">
+            <h3>Redeem Premium Code</h3>
+            <i class="fas fa-times" style="cursor: pointer;" onclick="closeDrawer('redeem-drawer')"></i>
+        </div>
+        <div class="input-group">
+            <label>Redemption Code</label>
+            <input type="text" id="redeem-code-input" placeholder="e.g. DEVPREM30">
+        </div>
+        <button class="btn btn-primary" onclick="submitRedeemCode()">Redeem Code</button>
+    </div>
+
+    <div id="settings-drawer" class="drawer">
+        <div class="drawer-header">
+            <i class="fas fa-times" style="cursor: pointer;" onclick="closeDrawer('settings-drawer')"></i>
             <h3>Settings</h3>
+            <div></div>
         </div>
-        <div class="input-group" style="display: flex; align-items: center; justify-content: space-between;">
-            <label style="margin: 0;">Dark Mode</label>
-            <label class="switch">
-                <input type="checkbox" id="setting-dark-mode">
-                <span class="slider"></span>
-            </label>
+        
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <label style="font-weight: 600;">Dark Mode</label>
+            <input type="checkbox" id="setting-dark-mode" style="width: 20px; height: 20px;">
         </div>
-        <div class="input-group" style="display: flex; align-items: center; justify-content: space-between; margin-top: 20px;">
-            <label style="margin: 0;">Use Technical Language</label>
-            <label class="switch">
-                <input type="checkbox" id="setting-tech-lang">
-                <span class="slider"></span>
-            </label>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <div>
+                <label style="font-weight: 600; display: block;">Use technical language</label>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Toggles developer term vernacular across the interface</span>
+            </div>
+            <input type="checkbox" id="setting-tech-lang" style="width: 20px; height: 20px;">
         </div>
-        <button class="btn btn-primary" style="margin-top: 25px;" onclick="saveUserSettings()">Save Settings</button>
+
+        <button class="btn btn-primary" onclick="saveUserSettings()">Save</button>
     </div>
 
-    <!-- CREATE BUG DRAWER -->
-    <div id="create-bug-drawer" class="drawer drawer-right">
+    <div id="create-bug-drawer" class="drawer">
         <div class="drawer-header">
             <h3>Create Bug Report</h3>
-            <i class="fas fa-times close-btn" onclick="closeAllDrawers()"></i>
+            <i class="fas fa-times" style="cursor: pointer;" onclick="closeDrawer('create-bug-drawer')"></i>
         </div>
         <div class="input-group">
             <label>Bug Title</label>
-            <input type="text" id="bug-title-input" placeholder="Unexpected null pointer...">
+            <input type="text" id="bug-title-input" placeholder="Brief summary of issue">
         </div>
         <div class="input-group">
-            <label>Description</label>
-            <textarea id="bug-desc-input" rows="3" placeholder="Steps to reproduce..."></textarea>
+            <label>Bug Description</label>
+            <textarea id="bug-desc-input" rows="3"></textarea>
         </div>
         <div class="input-group">
             <label>Evidence File (Max 10MB)</label>
-            <input type="file" id="bug-evidence-input">
+            <input type="file" id="bug-file-input">
         </div>
-        <button class="btn btn-danger" onclick="submitBugReport()">Submit Report</button>
+        <button class="btn btn-danger" onclick="submitBugReport()">Submit Bug Report</button>
     </div>
 
-    <!-- QR CODE MODAL -->
-    <div id="qr-modal" class="modal hidden">
-        <div class="modal-body" style="text-align: center;">
-            <h3>Scan Invite QR</h3>
-            <div id="qrcode-container" style="display: flex; justify-content: center; margin: 20px 0;"></div>
-            <button class="btn btn-secondary" style="width: 100%;" onclick="document.getElementById('qr-modal').classList.add('hidden')">Close</button>
+    <div id="friend-chat-modal" class="modal-overlay hidden">
+        <div class="modal-card" style="max-width: 500px; display: flex; flex-direction: column; height: 500px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+                <h3 id="friend-chat-title">Chat with Friend</h3>
+                <i class="fas fa-times" style="cursor: pointer;" onclick="closeFriendChatModal()"></i>
+            </div>
+            <div id="friend-chat-box" class="chat-box" style="flex: 1; margin: 15px 0;"></div>
+            <div class="chat-input-area">
+                <input type="text" id="friend-chat-input" placeholder="Type direct message..." style="flex: 1;">
+                <button class="btn btn-secondary" onclick="toggleFriendVoiceRecord()"><i class="fas fa-microphone"></i></button>
+                <button class="btn btn-primary" style="width: auto;" onclick="sendFriendChatMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
         </div>
     </div>
 
-    <!-- REPORT FRIEND MODAL -->
-    <div id="report-modal" class="modal hidden">
-        <div class="modal-body">
+    <div id="report-friend-modal" class="modal-overlay hidden">
+        <div class="modal-card">
             <h3>Report Friend</h3>
             <div class="input-group" style="margin-top: 15px;">
                 <label>Category</label>
                 <select id="report-category">
-                    <option value="bullying">Bullying or Harassment</option>
-                    <option value="spam">Spam or Abuse</option>
-                    <option value="inappropriate">Inappropriate Content</option>
+                    <option value="Bullying">Bullying / Harassment</option>
+                    <option value="Spam">Spamming</option>
+                    <option value="Inappropriate Content">Inappropriate Content</option>
                 </select>
             </div>
             <div class="input-group">
@@ -587,20 +648,33 @@
             </div>
             <div class="input-group">
                 <label>Evidence Image (Optional)</label>
-                <input type="file" id="report-evidence" accept="image/*">
+                <input type="file" id="report-evidence-file" accept="image/*">
             </div>
             <button class="btn btn-danger" onclick="submitFriendReport()">Submit Report</button>
-            <button class="btn btn-secondary" style="width: 100%; margin-top: 8px;" onclick="document.getElementById('report-modal').classList.add('hidden')">Cancel</button>
+            <button class="btn btn-secondary" style="width: 100%; margin-top: 8px;" onclick="closeModal('report-friend-modal')">Cancel</button>
         </div>
     </div>
 
-    <!-- FIREBASE & CORE SCRIPT -->
+    <div id="qr-modal" class="modal-overlay hidden">
+        <div class="modal-card" style="text-align: center;">
+            <h3>Workspace Invite QR</h3>
+            <div id="qrcode-container" style="display: flex; justify-content: center; margin: 20px 0;"></div>
+            <button class="btn btn-secondary" style="width: 100%;" onclick="closeModal('qr-modal')">Close</button>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, sendEmailVerification, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, set, push, onValue, update, remove, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { 
+            getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
+            signInWithPopup, GoogleAuthProvider, sendEmailVerification, 
+            sendPasswordResetEmail, signOut, onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { 
+            getDatabase, ref, set, get, child, push, update, remove, onValue, onDisconnect 
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // FIREBASE & CLOUDINARY CONFIG
+        // FIREBASE & CLOUDINARY CONFIGS
         const firebaseConfig = {
             apiKey: "AIzaSyAlnHBmvU5djObYI2pOX99mP8c8ammJNNE",
             authDomain: "devbandteam.firebaseapp.com",
@@ -619,780 +693,1003 @@
         const db = getDatabase(app);
         const googleProvider = new GoogleAuthProvider();
 
-        // GLOBAL APPLICATION STATE
-        let currentUser = null;
-        let userData = null;
-        let isAuthLoginMode = true;
-        let resendCooldownTimer = null;
-        let currentWorkspaceId = null;
-        let currentWorkspaceData = null;
+        // GLOBALS
+        let currentUserData = null;
+        let activeWorkspaceId = null;
+        let activeWorkspaceData = null;
         let activeFriendChatUid = null;
         let activeReportFriendUid = null;
         let mediaRecorder = null;
         let audioChunks = [];
-        let isRecording = false;
+        let friendMediaRecorder = null;
+        let friendAudioChunks = [];
+        let resendCooldown = 0;
 
-        // UTILITIES & TOAST
-        window.showToast = (msg, type = 'info') => {
+        // In-App File Editing Globals
+        let currentEditingFileId = null;
+        let currentViewingFileId = null;
+        let viewFileListenerUnsub = null;
+
+        // UI HELPERS
+        window.showToast = (msg, type = 'primary') => {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            const icon = type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
-            toast.innerHTML = `<i class="fas ${icon}"></i> <span>${msg}</span>`;
+            toast.innerHTML = `<i class="fas fa-info-circle"></i> <span>${msg}</span>`;
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 4000);
         };
 
+        // RULE 1: Prevent opening sidebar on auth, verification, or privacy screen
         window.toggleSidebar = () => {
+            if (document.getElementById('main-dashboard').classList.contains('hidden')) {
+                return; 
+            }
             document.getElementById('sidebar').classList.toggle('active');
-            document.getElementById('overlay').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
         };
 
         window.openDrawer = (id) => {
-            closeAllDrawers();
-            const el = document.getElementById(id);
-            if(el) el.classList.add('active');
-            document.getElementById('overlay').classList.add('active');
+            document.getElementById(id).classList.add('active');
+            if(document.getElementById('sidebar').classList.contains('active')) toggleSidebar();
         };
 
-        window.closeAllDrawers = () => {
-            document.querySelectorAll('.drawer').forEach(d => d.classList.remove('active'));
-            document.getElementById('sidebar').classList.remove('active');
-            document.getElementById('overlay').classList.remove('active');
+        window.closeDrawer = (id) => {
+            document.getElementById(id).classList.remove('active');
         };
 
-        window.previewImage = (input, imgId) => {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    document.getElementById(imgId).src = e.target.result;
-                };
-                reader.readAsDataURL(input.files[0]);
+        window.closeModal = (id) => {
+            document.getElementById(id).classList.add('hidden');
+        };
+
+        window.toggleAuthView = (mode) => {
+            if (mode === 'signup') {
+                document.getElementById('login-card').classList.add('hidden');
+                document.getElementById('signup-card').classList.remove('hidden');
+            } else {
+                document.getElementById('signup-card').classList.add('hidden');
+                document.getElementById('login-card').classList.remove('hidden');
             }
         };
 
-        // CLOUDINARY UPLOAD HELPER
-        async function uploadToCloudinary(file) {
-            if(!file) return "";
-            const formData = new FormData();
-            formData.append("file", file);
-            formData.append("upload_preset", UPLOAD_PRESET);
-            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {
-                method: "POST",
-                body: formData
+        // CLOUDINARY UPLOADER WITH PROGRESS INDICATOR
+        function uploadToCloudinaryWithProgress(file, maxMb = 100, onProgress = null) {
+            return new Promise((resolve, reject) => {
+                if (file.size > maxMb * 1024 * 1024) {
+                    showToast(`File exceeds limit of ${maxMb}MB`, 'error');
+                    return reject(new Error("File size exceeded"));
+                }
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', UPLOAD_PRESET);
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, true);
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable && onProgress) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        onProgress(percent);
+                    }
+                };
+
+                xhr.onload = () => {
+                    if (xhr.status === 200) {
+                        const res = JSON.parse(xhr.responseText);
+                        resolve(res.secure_url);
+                    } else {
+                        reject(new Error("Upload failed"));
+                    }
+                };
+
+                xhr.onerror = () => reject(new Error("Network error during upload"));
+                xhr.send(formData);
             });
-            const data = await res.json();
-            return data.secure_url || "";
         }
 
-        // GENERATE UNIQUE CODES
-        async function generateUniqueFriendCode() {
-            let code = "";
-            let exists = true;
-            while(exists) {
-                code = Math.floor(100000 + Math.random() * 900000).toString();
-                const snapshot = await get(child(ref(db), `friendCodes/${code}`));
-                if(!snapshot.exists()) exists = false;
+        async function uploadToCloudinary(file, maxMb = 100) {
+            return uploadToCloudinaryWithProgress(file, maxMb, null);
+        }
+
+        // GENERATORS
+        function generateFriendCode() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        function generateWorkspacePin() {
+            return Math.floor(10000000 + Math.random() * 90000000).toString();
+        }
+
+        async function getUniqueFriendCode() {
+            let code = generateFriendCode();
+            let isUnique = false;
+            while (!isUnique) {
+                const snap = await get(child(ref(db), `friendCodes/${code}`));
+                if (!snap.exists()) {
+                    isUnique = true;
+                } else {
+                    code = generateFriendCode();
+                }
             }
             return code;
         }
 
-        async function generateUniqueWorkspacePin() {
-            let pin = "";
-            let exists = true;
-            while(exists) {
-                pin = Math.floor(10000000 + Math.random() * 90000000).toString();
-                const snapshot = await get(child(ref(db), `workspacePins/${pin}`));
-                if(!snapshot.exists()) exists = false;
+        async function getUniqueWorkspacePin() {
+            let pin = generateWorkspacePin();
+            let isUnique = false;
+            while (!isUnique) {
+                const snap = await get(child(ref(db), `workspacePins/${pin}`));
+                if (!snap.exists()) {
+                    isUnique = true;
+                } else {
+                    pin = generateWorkspacePin();
+                }
             }
             return pin;
         }
 
-        // AUTH & WORKFLOW
-        window.toggleAuthPage = () => {
-            isAuthLoginMode = !isAuthLoginMode;
-            document.getElementById('auth-title').innerText = isAuthLoginMode ? "Welcome Back" : "Create Account";
-            document.getElementById('auth-submit-btn').innerText = isAuthLoginMode ? "Sign In" : "Sign Up";
-            document.getElementById('auth-toggle-text').innerText = isAuthLoginMode ? "New to the app?" : "Already have an account?";
-            document.getElementById('auth-toggle-link').innerText = isAuthLoginMode ? "Signup now" : "Login instead.";
-            document.getElementById('forgot-password-btn').classList.toggle('hidden', !isAuthLoginMode);
+        // AUTH HANDLERS
+        window.handleEmailLogin = async () => {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-password').value;
+            if(!email || !pass) return showToast("Enter email and password", "error");
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+            } catch(e) { showToast(e.message, "error"); }
         };
 
-        window.handleEmailAuth = async () => {
-            const email = document.getElementById('auth-email').value;
-            const pass = document.getElementById('auth-password').value;
-            if(!email || !pass) return showToast("Please fill all credentials", "error");
-
+        window.handleEmailSignup = async () => {
+            const email = document.getElementById('signup-email').value;
+            const pass = document.getElementById('signup-password').value;
+            if(!email || !pass) return showToast("Enter email and password", "error");
             try {
-                if(isAuthLoginMode) {
-                    await signInWithEmailAndPassword(auth, email, pass);
-                } else {
-                    const cred = await createUserWithEmailAndPassword(auth, email, pass);
-                    const friendCode = await generateUniqueFriendCode();
-                    await set(ref(db, `users/${cred.user.uid}`), {
-                        email: email,
-                        displayName: email.split('@')[0].substring(0, 10),
-                        friendCode: friendCode,
-                        joined: Date.now(),
-                        isGoogle: false,
-                        privacyAccepted: false
-                    });
-                    await set(ref(db, `friendCodes/${friendCode}`), cred.user.uid);
-                    await sendEmailVerification(cred.user);
-                }
-            } catch(e) {
-                showToast(e.message, "error");
-            }
+                const res = await createUserWithEmailAndPassword(auth, email, pass);
+                await sendEmailVerification(res.user);
+            } catch(e) { showToast(e.message, "error"); }
         };
 
         window.handleGoogleAuth = async () => {
             try {
-                const res = await signInWithPopup(auth, googleProvider);
-                const userSnap = await get(ref(db, `users/${res.user.uid}`));
-                if(!userSnap.exists()) {
-                    const friendCode = await generateUniqueFriendCode();
-                    await set(ref(db, `users/${res.user.uid}`), {
-                        email: res.user.email,
-                        displayName: (res.user.displayName || "Dev").substring(0, 10),
-                        photoURL: res.user.photoURL || "",
-                        friendCode: friendCode,
-                        joined: Date.now(),
-                        isGoogle: true,
-                        privacyAccepted: false
-                    });
-                    await set(ref(db, `friendCodes/${friendCode}`), res.user.uid);
-                }
-            } catch(e) {
-                showToast(e.message, "error");
-            }
+                await signInWithPopup(auth, googleProvider);
+            } catch(e) { showToast(e.message, "error"); }
         };
 
         window.handleForgotPassword = async () => {
-            const email = document.getElementById('auth-email').value;
-            if(!email) return showToast("Enter email first", "error");
+            const email = document.getElementById('login-email').value;
+            if(!email) return showToast("Please type your email address above first", "error");
             try {
                 await sendPasswordResetEmail(auth, email);
-                showToast("Password reset link dispatched.");
+                showToast("Password reset link dispatched!");
             } catch(e) { showToast(e.message, "error"); }
         };
 
-        window.handleLogout = () => signOut(auth).then(() => window.location.reload());
-
         window.resendVerificationEmail = async () => {
-            const btn = document.getElementById('resend-verify-btn');
-            btn.disabled = true;
+            if (resendCooldown > 0) return;
             try {
                 await sendEmailVerification(auth.currentUser);
-                showToast("Verification email sent!");
+                showToast("Verification email resent!");
+                resendCooldown = 20;
+                const btn = document.getElementById('resend-email-btn');
+                btn.disabled = true;
+                const interval = setInterval(() => {
+                    resendCooldown--;
+                    btn.innerText = `Resend Verification Email (${resendCooldown}s)`;
+                    if(resendCooldown <= 0) {
+                        clearInterval(interval);
+                        btn.disabled = false;
+                        btn.innerText = "Resend Verification Email";
+                    }
+                }, 1000);
             } catch(e) { showToast(e.message, "error"); }
-
-            let left = 20;
-            btn.innerText = `Cooldown (${left}s)`;
-            resendCooldownTimer = setInterval(() => {
-                left--;
-                if(left <= 0) {
-                    clearInterval(resendCooldownTimer);
-                    btn.disabled = false;
-                    btn.innerText = "Resend Verification Email";
-                } else {
-                    btn.innerText = `Cooldown (${left}s)`;
-                }
-            }, 1000);
         };
 
         window.checkVerificationStatus = async () => {
             await auth.currentUser.reload();
-            if(auth.currentUser.emailVerified) {
-                routeUserFlow();
+            if (auth.currentUser.emailVerified) {
+                initUserAccountState(auth.currentUser);
             } else {
-                showToast("Email not verified yet.", "error");
+                showToast("Email still not verified. Please check inbox/spam.", "error");
             }
         };
 
-        // PRIVACY POLICY & COMPULSORY PROFILE SETUP
-        window.handlePolicyScroll = (el) => {
-            if (el.scrollHeight - el.scrollTop <= el.clientHeight + 5) {
-                document.getElementById('policy-checkbox').disabled = false;
-            }
-        };
+        window.logout = () => signOut(auth).then(() => window.location.reload());
 
-        document.getElementById('policy-checkbox').addEventListener('change', (e) => {
-            document.getElementById('policy-continue-btn').disabled = !e.target.checked;
+        // AUTH STATE LISTENER & WORKFLOW ENGINE
+        onAuthStateChanged(auth, async (user) => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const joinPinParam = urlParams.get('joinPin');
+
+            if (user) {
+                // Check Bans
+                const banSnap = await get(child(ref(db), `bans/${user.uid}`));
+                if (banSnap.exists() && banSnap.val().until > Date.now()) {
+                    const b = banSnap.val();
+                    document.getElementById('ban-screen').classList.remove('hidden');
+                    document.getElementById('ban-time-left').innerText = `Ban Duration Remaining: ${Math.ceil((b.until - Date.now()) / 3600000)} Hours`;
+                    if (b.evidenceImg) {
+                        document.getElementById('ban-evidence-container').innerHTML = `<img src="${b.evidenceImg}" style="max-width:100%; height:150px; border-radius:8px; border:1px solid var(--border);">`;
+                    }
+                    document.getElementById('hamburger-btn').classList.add('hidden');
+                    return;
+                }
+
+                // Check Email Verification
+                const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
+                if (!isGoogle && !user.emailVerified) {
+                    document.getElementById('auth-section').classList.remove('hidden');
+                    document.getElementById('login-card').classList.add('hidden');
+                    document.getElementById('signup-card').classList.add('hidden');
+                    document.getElementById('verify-card').classList.remove('hidden');
+                    document.getElementById('hamburger-btn').classList.add('hidden');
+                    return;
+                }
+
+                initUserAccountState(user);
+            } else {
+                // RULE 4: If unauthenticated user clicks invite link
+                if (joinPinParam) {
+                    showToast("Log into an account first, if you dont have an account, create one and log into it and then click the invite link of the workspace you want to join.", "error");
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+                document.getElementById('hamburger-btn').classList.add('hidden');
+                document.getElementById('auth-section').classList.remove('hidden');
+                document.getElementById('main-dashboard').classList.add('hidden');
+            }
         });
 
-        window.completePrivacyPolicy = async () => {
-            await update(ref(db, `users/${currentUser.uid}`), { privacyAccepted: true });
+        async function initUserAccountState(user) {
+            document.getElementById('auth-section').classList.add('hidden');
+            
+            let userRef = ref(db, `users/${user.uid}`);
+            let snap = await get(userRef);
+
+            if (!snap.exists()) {
+                const uniqueCode = await getUniqueFriendCode();
+                const newUser = {
+                    uid: user.uid,
+                    email: user.email,
+                    friendCode: uniqueCode,
+                    privacyAgreed: false,
+                    profileCompleted: false,
+                    displayName: '',
+                    bio: '',
+                    photoURL: '',
+                    settings: { darkMode: false, useTechLang: false }
+                };
+                await set(userRef, newUser);
+                await set(ref(db, `friendCodes/${uniqueCode}`), user.uid);
+                currentUserData = newUser;
+            } else {
+                currentUserData = snap.val();
+            }
+
+            // Sync User Realtime Settings & Profile Updates
+            onValue(userRef, (s) => {
+                currentUserData = s.val();
+                applyUserSettings(currentUserData.settings);
+                checkPremiumExpiry();
+                renderNavProfile();
+            });
+
+            // Check Privacy Policy Workflow
+            if (!currentUserData.privacyAgreed) {
+                document.getElementById('privacy-modal').classList.remove('hidden');
+                document.getElementById('hamburger-btn').classList.add('hidden');
+                initPrivacyScrollListener();
+                return;
+            }
+
+            // Check Profile Completion Workflow
+            if (!currentUserData.profileCompleted) {
+                document.getElementById('hamburger-btn').classList.add('hidden');
+                openDrawer('mandatory-profile-drawer');
+                return;
+            }
+
+            // Enter Main App
+            document.getElementById('main-dashboard').classList.remove('hidden');
+            document.getElementById('nav-user').classList.remove('hidden');
+            document.getElementById('hamburger-btn').classList.remove('hidden');
+            
+            loadSidebarWorkspaces();
+            initFriendsListeners();
+
+            // RULE 4: Handle Invite Link for Logged In User
+            const urlParams = new URLSearchParams(window.location.search);
+            const joinPinParam = urlParams.get('joinPin');
+            if (joinPinParam) {
+                handleAutomaticWorkspaceJoin(joinPinParam);
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+
+        async function handleAutomaticWorkspaceJoin(pin) {
+            const pinSnap = await get(child(ref(db), `workspacePins/${pin}`));
+            if (!pinSnap.exists()) {
+                showToast("Invalid invite link pin", "error");
+                return;
+            }
+
+            const wsId = pinSnap.val();
+            const userWsSnap = await get(child(ref(db), `userWorkspaces/${currentUserData.uid}/${wsId}`));
+
+            if (userWsSnap.exists()) {
+                showToast("You are already a member of this workspace!", "warning");
+                openWorkspace(wsId);
+            } else {
+                // Open Sidebar automatically and trigger join drawer
+                document.getElementById('sidebar').classList.add('active');
+                document.getElementById('sidebar-overlay').classList.add('active');
+                openDrawer('join-ws-drawer');
+                document.getElementById('join-ws-pin').value = pin;
+                submitJoinWorkspace();
+            }
+        }
+
+        // PRIVACY & PROFILE COMPLETION
+        function initPrivacyScrollListener() {
+            const box = document.getElementById('privacy-scroll-box');
+            box.onscroll = () => {
+                if (box.scrollTop + box.clientHeight >= box.scrollHeight - 5) {
+                    document.getElementById('privacy-check').disabled = false;
+                }
+            };
+            document.getElementById('privacy-check').onchange = (e) => {
+                document.getElementById('privacy-continue-btn').disabled = !e.target.checked;
+            };
+        }
+
+        window.acceptPrivacyPolicy = async () => {
+            await update(ref(db, `users/${currentUserData.uid}`), { privacyAgreed: true });
             document.getElementById('privacy-modal').classList.add('hidden');
-            openDrawer('complete-profile-drawer');
+            openDrawer('mandatory-profile-drawer');
         };
 
         window.saveInitialProfile = async () => {
-            const name = document.getElementById('setup-display-name').value.trim();
-            const bio = document.getElementById('setup-bio').value.trim();
-            const file = document.getElementById('setup-avatar-file').files[0];
+            const name = document.getElementById('init-display-name').value.trim();
+            const bio = document.getElementById('init-bio').value.trim();
+            const file = document.getElementById('init-avatar-input').files[0];
 
-            if(name.length < 3 || name.length > 10) return showToast("Display name must be 3-10 characters.", "error");
-
-            if(file && file.size > 5 * 1024 * 1024 && !checkIsPremium()) {
-                return showToast("Profile picture must be under 5MB for free tier.", "error");
+            if (name.length < 3 || name.length > 10) {
+                return showToast("Display name must be 3 to 10 characters", "error");
             }
 
-            let photoURL = userData.photoURL || "";
-            if(file) photoURL = await uploadToCloudinary(file);
+            let photoURL = '';
+            if (file) {
+                const limit = currentUserData.isPremium ? 10 : 5;
+                photoURL = await uploadToCloudinary(file, limit);
+            }
 
-            await update(ref(db, `users/${currentUser.uid}`), {
+            await update(ref(db, `users/${currentUserData.uid}`), {
                 displayName: name,
                 bio: bio,
                 photoURL: photoURL,
                 profileCompleted: true
             });
 
-            closeAllDrawers();
-            showToast("Profile completed successfully!");
-            routeUserFlow();
+            closeDrawer('mandatory-profile-drawer');
+            document.getElementById('main-dashboard').classList.remove('hidden');
+            document.getElementById('nav-user').classList.remove('hidden');
+            document.getElementById('hamburger-btn').classList.remove('hidden');
+            loadSidebarWorkspaces();
+            initFriendsListeners();
         };
 
-        // AUTH STATE ROUTER & BAN MONITORING
-        onAuthStateChanged(auth, async (user) => {
-            if(user) {
-                currentUser = user;
-                
-                // Monitor BAN state outside
-                onValue(ref(db, `bans/${user.uid}`), (snap) => {
-                    if(snap.exists()) {
-                        const banData = snap.val();
-                        if(banData.until > Date.now()) {
-                            document.getElementById('ban-screen').classList.remove('hidden');
-                            document.getElementById('ban-time-remaining').innerText = `Ban expires in: ${Math.ceil((banData.until - Date.now()) / 60000)} mins`;
-                            if(banData.evidence) {
-                                document.getElementById('ban-evidence-container').innerHTML = `<img src="${banData.evidence}" style="max-width: 100%; max-height: 150px; border-radius: 8px;">`;
-                            }
-                            return;
-                        }
-                    }
-                    document.getElementById('ban-screen').classList.add('hidden');
-                });
-
-                onValue(ref(db, `users/${user.uid}`), (snap) => {
-                    userData = snap.val() || {};
-                    applySettings(userData.settings);
-                    checkPremiumExpiry();
-                    routeUserFlow();
-                    loadUserWorkspaces();
-                    loadFriendRequests();
-                    loadFriendList();
-                    listenMentionNotifications();
-                });
-            } else {
-                currentUser = null;
-                userData = null;
-                document.getElementById('auth-section').classList.remove('hidden');
-                document.getElementById('verify-section').classList.add('hidden');
-                document.getElementById('main-dashboard').classList.add('hidden');
-                document.getElementById('nav-right').classList.add('hidden');
+        function renderNavProfile() {
+            if(!currentUserData) return;
+            document.getElementById('user-display-name').innerText = currentUserData.displayName || currentUserData.email;
+            if(currentUserData.photoURL) {
+                const img = document.getElementById('user-nav-avatar');
+                img.src = currentUserData.photoURL;
+                img.style.display = 'block';
             }
-        });
-
-        function routeUserFlow() {
-            if(!currentUser) return;
-            
-            // Check email verification
-            if(!userData.isGoogle && !currentUser.emailVerified) {
-                document.getElementById('auth-section').classList.add('hidden');
-                document.getElementById('verify-section').classList.remove('hidden');
-                document.getElementById('main-dashboard').classList.add('hidden');
-                return;
-            }
-
-            document.getElementById('auth-section').classList.add('hidden');
-            document.getElementById('verify-section').classList.add('hidden');
-
-            // Privacy Policy check
-            if(!userData.privacyAccepted) {
-                document.getElementById('privacy-modal').classList.remove('hidden');
-                return;
-            }
-
-            // Profile Setup Check
-            if(!userData.profileCompleted) {
-                openDrawer('complete-profile-drawer');
-                return;
-            }
-
-            // Active App State
-            document.getElementById('main-dashboard').classList.remove('hidden');
-            document.getElementById('nav-right').classList.remove('hidden');
-            document.getElementById('nav-user-name').innerText = userData.displayName || "User";
-            document.getElementById('nav-user-avatar').src = userData.photoURL || "https://via.placeholder.com/36";
-            
-            populateProfileDrawer();
+            document.getElementById('edit-display-name').value = currentUserData.displayName || '';
+            document.getElementById('edit-bio').value = currentUserData.bio || '';
+            document.getElementById('profile-friend-code').value = currentUserData.friendCode || '';
+            document.getElementById('profile-uid').value = currentUserData.uid || '';
         }
 
-        // SETTINGS & SYNC
-        function applySettings(settings) {
-            if(!settings) return;
-            if(settings.darkMode) {
-                document.body.classList.add('dark-theme');
+        // SETTINGS & TECHNICAL LANGUAGE TOGGLE
+        window.saveUserSettings = async () => {
+            const darkMode = document.getElementById('setting-dark-mode').checked;
+            const useTechLang = document.getElementById('setting-tech-lang').checked;
+
+            const settings = { darkMode, useTechLang };
+            await update(ref(db, `users/${currentUserData.uid}/settings`), settings);
+            showToast("Settings updated & synced across devices!");
+            closeDrawer('settings-drawer');
+        };
+
+        function applyUserSettings(settings) {
+            if (!settings) return;
+            if (settings.darkMode) {
+                document.body.classList.add('dark-mode');
                 document.getElementById('setting-dark-mode').checked = true;
             } else {
-                document.body.classList.remove('dark-theme');
+                document.body.classList.remove('dark-mode');
                 document.getElementById('setting-dark-mode').checked = false;
             }
 
-            const useTech = !!settings.techLang;
-            document.getElementById('setting-tech-lang').checked = useTech;
+            document.getElementById('setting-tech-lang').checked = settings.useTechLang;
+            
             document.querySelectorAll('.lang-term').forEach(el => {
-                el.innerText = useTech ? el.dataset.tech : el.dataset.simple;
+                el.innerText = settings.useTechLang ? el.dataset.tech : el.dataset.simple;
             });
         }
-
-        window.saveUserSettings = async () => {
-            const settings = {
-                darkMode: document.getElementById('setting-dark-mode').checked,
-                techLang: document.getElementById('setting-tech-lang').checked
-            };
-            await update(ref(db, `users/${currentUser.uid}/settings`), settings);
-            showToast("Settings synchronized across devices.");
-            closeAllDrawers();
-        };
-
-        // PROFILE EDIT & PREMIUM
-        function populateProfileDrawer() {
-            if(!userData) return;
-            document.getElementById('edit-profile-name').value = userData.displayName || '';
-            document.getElementById('edit-profile-bio').value = userData.bio || '';
-            document.getElementById('edit-profile-avatar-preview').src = userData.photoURL || 'https://via.placeholder.com/80';
-            document.getElementById('profile-friend-code').innerText = userData.friendCode || '------';
-            document.getElementById('profile-uid').innerText = currentUser.uid;
-
-            const isPrem = checkIsPremium();
-            const text = isPrem ? `Premium Active (Expires: ${new Date(userData.premiumUntil).toLocaleDateString()})` : "Free Plan";
-            document.getElementById('premium-status-display').innerText = text;
-        }
-
-        function checkIsPremium() {
-            return userData && userData.premiumUntil && userData.premiumUntil > Date.now();
-        }
-
-        async function checkPremiumExpiry() {
-            if(userData && userData.premiumUntil && userData.premiumUntil <= Date.now()) {
-                // Premium expired clean up
-                await update(ref(db, `users/${currentUser.uid}`), { premiumUntil: null });
-                if(userData.photoURL && userData.photoURL.length > 0) {
-                    // Auto remove if pic > 5MB limit
-                    fetch(userData.photoURL, { method: 'HEAD' }).then(res => {
-                        const size = res.headers.get("content-length");
-                        if(size && size > 5 * 1024 * 1024) {
-                            update(ref(db, `users/${currentUser.uid}`), { photoURL: "" });
-                        }
-                    }).catch(()=>{});
-                }
-            }
-        }
-
-        window.saveEditedProfile = async () => {
-            const name = document.getElementById('edit-profile-name').value.trim();
-            const bio = document.getElementById('edit-profile-bio').value.trim();
-            const file = document.getElementById('edit-profile-avatar-file').files[0];
-
-            if(name.length < 3 || name.length > 10) return showToast("Display name must be 3-10 characters.", "error");
-
-            const maxAllowed = checkIsPremium() ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
-            if(file && file.size > maxAllowed) return showToast(`File size limit exceeded (${checkIsPremium() ? '10MB' : '5MB'}).`, "error");
-
-            let photoURL = userData.photoURL || '';
-            if(file) photoURL = await uploadToCloudinary(file);
-
-            await update(ref(db, `users/${currentUser.uid}`), {
-                displayName: name,
-                bio: bio,
-                photoURL: photoURL
-            });
-
-            closeAllDrawers();
-            showToast("Profile details updated.");
-        };
 
         // WORKSPACE CREATION & JOINING
         window.submitCreateWorkspace = async () => {
             const name = document.getElementById('create-ws-name').value.trim();
-            const iconFile = document.getElementById('create-ws-icon').files[0];
-            if(!name) return showToast("Workspace name required", "error");
+            const file = document.getElementById('create-ws-icon').files[0];
+            if (!name) return showToast("Enter workspace name", "error");
 
-            if(iconFile && iconFile.size > 8 * 1024 * 1024) return showToast("Icon must be at most 8MB.", "error");
+            let iconUrl = '';
+            if (file) {
+                iconUrl = await uploadToCloudinary(file, 8);
+            }
 
-            let iconUrl = "";
-            if(iconFile) iconUrl = await uploadToCloudinary(iconFile);
-
-            const pin = await generateUniqueWorkspacePin();
-            const wsRef = push(ref(db, 'workspaces'));
-            const wsId = wsRef.key;
+            const pin = await getUniqueWorkspacePin();
+            const newWsRef = push(ref(db, 'workspaces'));
+            const wsId = newWsRef.key;
 
             const wsData = {
                 id: wsId,
                 name: name,
                 icon: iconUrl,
                 pin: pin,
-                creator: currentUser.uid,
-                adminApproval: false,
-                created: Date.now(),
-                members: { [currentUser.uid]: { role: 'creator', joined: Date.now() } }
+                creatorUid: currentUserData.uid,
+                requireApproval: false,
+                members: { [currentUserData.uid]: { role: 'creator', joinedAt: Date.now() } }
             };
 
-            await set(wsRef, wsData);
+            await set(newWsRef, wsData);
             await set(ref(db, `workspacePins/${pin}`), wsId);
-            await set(ref(db, `userWorkspaces/${currentUser.uid}/${wsId}`), true);
+            await set(ref(db, `userWorkspaces/${currentUserData.uid}/${wsId}`), true);
 
-            closeAllDrawers();
             showToast("Workspace created successfully!");
-            switchWorkspace(wsId);
+            closeDrawer('create-ws-drawer');
+            openWorkspace(wsId);
         };
 
         window.submitJoinWorkspace = async () => {
             const pin = document.getElementById('join-ws-pin').value.trim();
-            if(pin.length !== 8) return showToast("Enter a valid 8-digit PIN", "error");
+            if (pin.length !== 8) return showToast("PIN must be 8 digits", "error");
 
-            const pinSnap = await get(ref(db, `workspacePins/${pin}`));
-            if(!pinSnap.exists()) return showToast("Workspace not found", "error");
+            const pinSnap = await get(child(ref(db), `workspacePins/${pin}`));
+            if (!pinSnap.exists()) return showToast("Workspace not found", "error");
 
             const wsId = pinSnap.val();
-            const wsSnap = await get(ref(db, `workspaces/${wsId}`));
+
+            // Check if user is already a member
+            const memberCheck = await get(child(ref(db), `userWorkspaces/${currentUserData.uid}/${wsId}`));
+            if (memberCheck.exists()) {
+                showToast("You are already a member of this workspace!", "warning");
+                closeDrawer('join-ws-drawer');
+                openWorkspace(wsId);
+                return;
+            }
+
+            const wsSnap = await get(child(ref(db), `workspaces/${wsId}`));
             const ws = wsSnap.val();
 
-            // Check 100 people limit
-            const memberCount = ws.members ? Object.keys(ws.members).length : 0;
-            if(memberCount >= 100) return showToast("Workspace is full (Max 100 members).", "error");
+            const memberCount = Object.keys(ws.members || {}).length;
+            if (memberCount >= 100) return showToast("Workspace member capacity full (100 Max)", "error");
 
-            if(ws.adminApproval) {
-                await set(ref(db, `workspaces/${wsId}/joinRequests/${currentUser.uid}`), {
-                    displayName: userData.displayName,
-                    uid: currentUser.uid,
-                    time: Date.now()
+            if (ws.requireApproval) {
+                await set(ref(db, `workspaces/${wsId}/joinRequests/${currentUserData.uid}`), {
+                    uid: currentUserData.uid,
+                    displayName: currentUserData.displayName,
+                    requestedAt: Date.now()
                 });
                 showToast("Request sent to admin");
-                closeAllDrawers();
+                closeDrawer('join-ws-drawer');
             } else {
-                await set(ref(db, `workspaces/${wsId}/members/${currentUser.uid}`), { role: 'member', joined: Date.now() });
-                await set(ref(db, `userWorkspaces/${currentUser.uid}/${wsId}`), true);
-                closeAllDrawers();
+                await set(ref(db, `workspaces/${wsId}/members/${currentUserData.uid}`), { role: 'member', joinedAt: Date.now() });
+                await set(ref(db, `userWorkspaces/${currentUserData.uid}/${wsId}`), true);
                 showToast("Joined workspace!");
-                switchWorkspace(wsId);
+                closeDrawer('join-ws-drawer');
+                openWorkspace(wsId);
             }
         };
 
-        function loadUserWorkspaces() {
-            onValue(ref(db, `userWorkspaces/${currentUser.uid}`), (snap) => {
-                const list = document.getElementById('sidebar-workspaces-list');
+        function loadSidebarWorkspaces() {
+            onValue(ref(db, `userWorkspaces/${currentUserData.uid}`), async (snap) => {
+                const list = document.getElementById('sidebar-ws-list');
                 list.innerHTML = '';
-                if(!snap.exists()) return;
-                
-                Object.keys(snap.val()).forEach(async (wsId) => {
-                    const wsSnap = await get(ref(db, `workspaces/${wsId}`));
-                    if(wsSnap.exists()) {
+                if (!snap.exists()) return;
+
+                const wsKeys = Object.keys(snap.val());
+                for (let wsId of wsKeys) {
+                    const wsSnap = await get(child(ref(db), `workspaces/${wsId}`));
+                    if (wsSnap.exists()) {
                         const ws = wsSnap.val();
-                        const div = document.createElement('div');
-                        div.className = 'list-item';
-                        div.style.cursor = 'pointer';
-                        div.innerHTML = `
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                <img class="avatar" src="${ws.icon || 'https://via.placeholder.com/36'}">
-                                <strong>${ws.name}</strong>
-                            </div>
+                        const item = document.createElement('div');
+                        item.className = `ws-item ${activeWorkspaceId === wsId ? 'active' : ''}`;
+                        item.onclick = () => openWorkspace(wsId);
+                        item.innerHTML = `
+                            ${ws.icon ? `<img src="${ws.icon}" class="ws-icon">` : `<div class="ws-icon">${ws.name.charAt(0)}</div>`}
+                            <span style="font-size:0.9rem; font-weight:600;">${ws.name}</span>
                         `;
-                        div.onclick = () => { switchWorkspace(wsId); closeAllDrawers(); };
-                        list.appendChild(div);
+                        list.appendChild(item);
                     }
-                });
+                }
             });
         }
 
-        function switchWorkspace(wsId) {
-            currentWorkspaceId = wsId;
-            document.getElementById('no-workspace-state').classList.add('hidden');
-            document.getElementById('active-workspace-state').classList.remove('hidden');
+        // ACTIVE WORKSPACE CONTROLLER
+        function openWorkspace(wsId) {
+            activeWorkspaceId = wsId;
+            document.getElementById('empty-ws-view').classList.add('hidden');
+            document.getElementById('active-ws-view').classList.remove('hidden');
 
             onValue(ref(db, `workspaces/${wsId}`), (snap) => {
-                if(!snap.exists()) {
-                    currentWorkspaceId = null;
-                    document.getElementById('no-workspace-state').classList.remove('hidden');
-                    document.getElementById('active-workspace-state').classList.add('hidden');
+                if (!snap.exists()) {
+                    document.getElementById('empty-ws-view').classList.remove('hidden');
+                    document.getElementById('active-ws-view').classList.add('hidden');
                     return;
                 }
-                currentWorkspaceData = snap.val();
-                renderWorkspaceHeader();
-                renderTasks();
-                renderMemberDirectory();
-                renderProjectShares();
-                renderActivityLogs();
-                renderBugLogs();
-                listenTeamChat();
-                renderJoinRequests();
+                activeWorkspaceData = snap.val();
+                renderWorkspaceUI();
             });
+            if(document.getElementById('sidebar').classList.contains('active')) toggleSidebar();
         }
 
-        function renderWorkspaceHeader() {
-            const ws = currentWorkspaceData;
-            document.getElementById('ws-header-title').innerText = ws.name;
-            document.getElementById('ws-header-pin').innerText = ws.pin;
-            document.getElementById('ws-header-icon').src = ws.icon || 'https://via.placeholder.com/80';
+        function renderWorkspaceUI() {
+            const ws = activeWorkspaceData;
+            document.getElementById('ws-display-name').innerText = ws.name;
+            document.getElementById('ws-display-pin').innerText = ws.pin;
 
-            const myRole = ws.members && ws.members[currentUser.uid] ? ws.members[currentUser.uid].role : '';
-            if(myRole === 'creator') {
-                document.getElementById('ws-config-btn').classList.remove('hidden');
+            const iconEl = document.getElementById('ws-display-icon');
+            if (ws.icon) {
+                iconEl.innerHTML = `<img src="${ws.icon}" style="width:100%;height:100%;border-radius:10px;object-fit:cover;">`;
             } else {
-                document.getElementById('ws-config-btn').classList.add('hidden');
+                iconEl.innerText = ws.name.charAt(0);
             }
+
+            const userRole = ws.members[currentUserData.uid]?.role;
+            const isCreator = userRole === 'creator';
+            const isAdmin = isCreator || userRole === 'admin';
+
+            document.getElementById('configure-ws-btn').classList.toggle('hidden', !isAdmin);
+            
+            document.getElementById('cfg-ws-name').value = ws.name;
+            document.getElementById('cfg-ws-approval').checked = ws.requireApproval || false;
+            
+            renderTasks();
+            renderMemberDirectory();
+            renderProjectShares();
+            renderCodeFiles(); // Render project code files
+            renderActivityLogs();
+            renderBugLogs();
+            renderTeamChat();
+            renderJoinRequests();
         }
 
-        // WORKSPACE CONFIG
-        window.saveWorkspaceConfig = async () => {
-            const name = document.getElementById('config-ws-name').value.trim();
-            const iconFile = document.getElementById('config-ws-icon').files[0];
-            const approval = document.getElementById('config-ws-approval').checked;
+        // WORKSPACE CONFIGURATION & DELETION
+        window.saveWorkspaceSettings = async () => {
+            const name = document.getElementById('cfg-ws-name').value.trim();
+            const file = document.getElementById('cfg-ws-icon').files[0];
+            const approval = document.getElementById('cfg-ws-approval').checked;
 
-            let iconUrl = currentWorkspaceData.icon || '';
-            if(iconFile) iconUrl = await uploadToCloudinary(iconFile);
+            let iconUrl = activeWorkspaceData.icon;
+            if (file) {
+                iconUrl = await uploadToCloudinary(file, 8);
+            }
 
-            await update(ref(db, `workspaces/${currentWorkspaceId}`), {
-                name: name || currentWorkspaceData.name,
+            await update(ref(db, `workspaces/${activeWorkspaceId}`), {
+                name: name,
                 icon: iconUrl,
-                adminApproval: approval
+                requireApproval: approval
             });
 
-            closeAllDrawers();
-            showToast("Workspace configuration saved.");
+            addActivityLog(`Updated workspace settings`);
+            showToast("Workspace updated!");
+            closeDrawer('configure-ws-drawer');
+        };
+
+        window.deleteCurrentWorkspace = async () => {
+            if(!confirm("Are you sure you want to delete this workspace permanently?")) return;
+            const pin = activeWorkspaceData.pin;
+            await remove(ref(db, `workspacePins/${pin}`));
+            await remove(ref(db, `workspaces/${activeWorkspaceId}`));
+            showToast("Workspace permanently removed.");
+            closeDrawer('configure-ws-drawer');
+            activeWorkspaceId = null;
+            document.getElementById('empty-ws-view').classList.remove('hidden');
+            document.getElementById('active-ws-view').classList.add('hidden');
         };
 
         function renderJoinRequests() {
+            const reqs = activeWorkspaceData.joinRequests;
             const container = document.getElementById('join-requests-list');
-            const section = document.getElementById('ws-join-requests-section');
+            const section = document.getElementById('join-requests-section');
             container.innerHTML = '';
 
-            if(!currentWorkspaceData.adminApproval) {
+            if (!reqs || !activeWorkspaceData.requireApproval) {
                 section.classList.add('hidden');
                 return;
             }
             section.classList.remove('hidden');
 
-            const reqs = currentWorkspaceData.joinRequests || {};
-            Object.keys(reqs).forEach(uid => {
-                const req = reqs[uid];
+            Object.values(reqs).forEach(r => {
                 const div = document.createElement('div');
-                div.className = 'list-item';
+                div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:8px; border-radius:6px;";
                 div.innerHTML = `
-                    <span>${req.displayName} (${req.uid})</span>
+                    <span style="font-size:0.85rem;">${r.displayName}</span>
                     <div style="display:flex; gap:5px;">
-                        <button class="btn btn-primary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="acceptJoinRequest('${uid}')">Approve</button>
-                        <button class="btn btn-danger" style="padding: 4px 8px; font-size: 0.75rem;" onclick="rejectJoinRequest('${uid}')">Deny</button>
+                        <button class="btn btn-success" style="padding:4px 8px; font-size:0.75rem;" onclick="approveJoinRequest('${r.uid}')">Approve</button>
+                        <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="denyJoinRequest('${r.uid}')">Deny</button>
                     </div>
                 `;
                 container.appendChild(div);
             });
         }
 
-        window.acceptJoinRequest = async (uid) => {
-            await set(ref(db, `workspaces/${currentWorkspaceId}/members/${uid}`), { role: 'member', joined: Date.now() });
-            await set(ref(db, `userWorkspaces/${uid}/${currentWorkspaceId}`), true);
-            await remove(ref(db, `workspaces/${currentWorkspaceId}/joinRequests/${uid}`));
-            showToast("Member approved!");
+        window.approveJoinRequest = async (targetUid) => {
+            await set(ref(db, `workspaces/${activeWorkspaceId}/members/${targetUid}`), { role: 'member', joinedAt: Date.now() });
+            await set(ref(db, `userWorkspaces/${targetUid}/${activeWorkspaceId}`), true);
+            await remove(ref(db, `workspaces/${activeWorkspaceId}/joinRequests/${targetUid}`));
+            addActivityLog(`Approved join request for member`);
         };
 
-        window.rejectJoinRequest = async (uid) => {
-            await remove(ref(db, `workspaces/${currentWorkspaceId}/joinRequests/${uid}`));
+        window.denyJoinRequest = async (targetUid) => {
+            await remove(ref(db, `workspaces/${activeWorkspaceId}/joinRequests/${targetUid}`));
         };
 
-        window.deleteWorkspacePermanently = async () => {
-            if(confirm("Are you sure you want to delete this workspace permanently?")) {
-                await remove(ref(db, `workspacePins/${currentWorkspaceData.pin}`));
-                await remove(ref(db, `workspaces/${currentWorkspaceId}`));
-                closeAllDrawers();
-                showToast("Workspace deleted permanently.");
-            }
-        };
-
-        // REALTIME TASKS
+        // COLLABORATIVE TASKS
         window.addWorkspaceTask = async () => {
-            const input = document.getElementById('new-task-input');
-            const title = input.value.trim();
-            if(!title) return;
+            const text = document.getElementById('new-task-input').value.trim();
+            const date = document.getElementById('new-task-date').value;
+            if(!text) return;
 
-            const taskRef = push(ref(db, `workspaces/${currentWorkspaceId}/tasks`));
-            await set(taskRef, {
-                title: title,
+            const newTaskRef = push(ref(db, `workspaces/${activeWorkspaceId}/tasks`));
+            await set(newTaskRef, {
+                title: text,
+                deadline: date || '',
                 completed: false,
-                deadline: null,
-                createdBy: userData.displayName
+                createdBy: currentUserData.displayName
             });
-            input.value = '';
-            logActivity(`Added task: "${title}"`);
+            document.getElementById('new-task-input').value = '';
+            addActivityLog(`Added task: "${text}"`);
         };
 
         function renderTasks() {
-            const container = document.getElementById('tasks-list-container');
+            const tasks = activeWorkspaceData.tasks || {};
+            const container = document.getElementById('tasks-container');
             container.innerHTML = '';
-            const tasks = currentWorkspaceData.tasks || {};
-            
-            Object.keys(tasks).forEach(tid => {
-                const t = tasks[tid];
-                const div = document.createElement('div');
-                div.className = 'list-item';
-                div.innerHTML = `
+
+            Object.entries(tasks).forEach(([key, t]) => {
+                const item = document.createElement('div');
+                item.className = `task-item ${t.completed ? 'completed' : ''}`;
+                item.innerHTML = `
                     <div style="display:flex; align-items:center; gap:10px;">
-                        <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTaskDone('${tid}', this.checked)">
-                        <span style="${t.completed ? 'text-decoration: line-through; color: var(--text-muted);' : ''}">${t.title}</span>
-                        ${t.deadline ? `<small style="color:var(--primary); font-size: 0.75rem;"><i class="fas fa-clock"></i> ${t.deadline}</small>` : ''}
+                        <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTaskStatus('${key}', this.checked)">
+                        <span>${t.title} ${t.deadline ? `<small style="color:var(--text-muted); margin-left:10px;"><i class="fas fa-calendar"></i> ${t.deadline}</small>` : ''}</span>
                     </div>
-                    <div style="display:flex; gap:8px;">
-                        <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="setTaskDeadline('${tid}')"><i class="fas fa-calendar"></i></button>
-                        <i class="fas fa-trash" style="color: var(--error); cursor: pointer; padding: 6px;" onclick="deleteTask('${tid}')"></i>
-                    </div>
+                    <i class="fas fa-trash" style="color:var(--error); cursor:pointer;" onclick="deleteWorkspaceTask('${key}')"></i>
                 `;
-                container.appendChild(div);
+                container.appendChild(item);
             });
         }
 
-        window.toggleTaskDone = async (tid, done) => {
-            await update(ref(db, `workspaces/${currentWorkspaceId}/tasks/${tid}`), { completed: done });
-            logActivity(`Marked task status updated`);
+        window.toggleTaskStatus = async (taskKey, status) => {
+            await update(ref(db, `workspaces/${activeWorkspaceId}/tasks/${taskKey}`), { completed: status });
         };
 
-        window.setTaskDeadline = async (tid) => {
-            const deadline = prompt("Enter deadline (e.g. 2026-08-10):");
-            if(deadline) {
-                await update(ref(db, `workspaces/${currentWorkspaceId}/tasks/${tid}`), { deadline: deadline });
-            }
+        window.deleteWorkspaceTask = async (taskKey) => {
+            await remove(ref(db, `workspaces/${activeWorkspaceId}/tasks/${taskKey}`));
         };
 
-        window.deleteTask = async (tid) => {
-            await remove(ref(db, `workspaces/${currentWorkspaceId}/tasks/${tid}`));
-        };
-
-        // MEMBER DIRECTORY
+        // MEMBER DIRECTORY & ROLES
         window.renderMemberDirectory = async () => {
-            const container = document.getElementById('members-list-container');
-            const search = document.getElementById('member-search-input').value.toLowerCase();
-            container.innerHTML = '';
+            const members = activeWorkspaceData.members || {};
+            const query = document.getElementById('search-member-input')?.value.toLowerCase().trim() || '';
+            const grid = document.getElementById('member-directory-grid');
+            grid.innerHTML = '';
 
-            const members = currentWorkspaceData.members || {};
-            const myRole = members[currentUser.uid] ? members[currentUser.uid].role : '';
+            const myRole = members[currentUserData.uid]?.role;
+            const isCreator = myRole === 'creator';
+            const isAdmin = isCreator || myRole === 'admin';
 
-            let found = false;
-            for(let uid of Object.keys(members)) {
-                const userSnap = await get(ref(db, `users/${uid}`));
-                if(!userSnap.exists()) continue;
-                const mUser = userSnap.val();
-                
-                if(search && !mUser.displayName.toLowerCase().includes(search) && !uid.toLowerCase().includes(search)) {
+            let matchCount = 0;
+
+            for (let [uid, info] of Object.entries(members)) {
+                const uSnap = await get(child(ref(db), `users/${uid}`));
+                if (!uSnap.exists()) continue;
+                const u = uSnap.val();
+
+                if (query && !u.displayName.toLowerCase().includes(query) && !uid.toLowerCase().includes(query)) {
                     continue;
                 }
-                found = true;
+                matchCount++;
 
-                const role = members[uid].role;
-                const div = document.createElement('div');
-                div.className = 'list-item';
-                div.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <img class="avatar" src="${mUser.photoURL || 'https://via.placeholder.com/36'}">
-                        <div>
-                            <strong>${mUser.displayName}</strong>
-                            ${role === 'creator' ? '<span class="creator-tag">Creator</span>' : ''}
-                            ${role === 'admin' ? '<span class="admin-tag">Admin</span>' : ''}
-                        </div>
+                const card = document.createElement('div');
+                card.className = 'member-card';
+                card.innerHTML = `
+                    ${u.photoURL ? `<img src="${u.photoURL}" class="member-avatar">` : `<div class="member-avatar">${u.displayName.charAt(0)}</div>`}
+                    <div style="flex:1; overflow:hidden;">
+                        <div style="font-weight:600; font-size:0.85rem; text-overflow:ellipsis; overflow:hidden;">${u.displayName}</div>
+                        ${info.role === 'creator' ? `<span class="creator-tag">Creator</span>` : ''}
+                        ${info.role === 'admin' ? `<span class="admin-tag">Admin</span>` : ''}
                     </div>
-                    <div style="display:flex; gap:5px;">
-                        ${myRole === 'creator' && uid !== currentUser.uid ? `
-                            <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="toggleAdminRole('${uid}', '${role}')">${role === 'admin' ? 'Remove Admin' : 'Make Admin'}</button>
-                            <button class="btn btn-danger" style="padding: 4px 8px; font-size: 0.75rem;" onclick="removeWorkspaceMember('${uid}')">Remove</button>
-                        ` : ''}
-                        ${myRole === 'admin' && role === 'member' ? `
-                            <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="toggleAdminRole('${uid}', 'member')">Make Admin</button>
-                            <button class="btn btn-danger" style="padding: 4px 8px; font-size: 0.75rem;" onclick="removeWorkspaceMember('${uid}')">Remove</button>
-                        ` : ''}
-                    </div>
+                    ${isAdmin && uid !== currentUserData.uid && info.role !== 'creator' ? `
+                        <i class="fas fa-ellipsis-vertical" style="cursor:pointer;" onclick="toggleMemberRoleMenu(event, '${uid}', '${info.role}')"></i>
+                    ` : ''}
                 `;
-                container.appendChild(div);
+                grid.appendChild(card);
             }
 
-            if(!found) container.innerHTML = '<p style="color: var(--text-muted); padding: 10px;">Member not found.</p>';
+            if (matchCount === 0) {
+                grid.innerHTML = `<div style="color:var(--text-muted); font-size:0.9rem;">Member not found.</div>`;
+            }
         };
 
-        window.toggleAdminRole = async (uid, currentRole) => {
-            const nextRole = currentRole === 'admin' ? 'member' : 'admin';
-            await update(ref(db, `workspaces/${currentWorkspaceId}/members/${uid}`), { role: nextRole });
-            logActivity(`Updated member role for ${uid}`);
+        window.toggleMemberRoleMenu = (e, targetUid, currentRole) => {
+            let action = prompt(`Choose action for member:\n1. Remove Member\n${currentRole === 'admin' ? '2. Demote from Admin' : '2. Promote to Admin'}`);
+            if (action === '1') {
+                remove(ref(db, `workspaces/${activeWorkspaceId}/members/${targetUid}`));
+                remove(ref(db, `userWorkspaces/${targetUid}/${activeWorkspaceId}`));
+                addActivityLog(`Removed member from workspace`);
+            } else if (action === '2') {
+                const newRole = currentRole === 'admin' ? 'member' : 'admin';
+                update(ref(db, `workspaces/${activeWorkspaceId}/members/${targetUid}`), { role: newRole });
+                addActivityLog(`Updated member role to ${newRole}`);
+            }
         };
 
-        window.removeWorkspaceMember = async (uid) => {
-            await remove(ref(db, `workspaces/${currentWorkspaceId}/members/${uid}`));
-            await remove(ref(db, `userWorkspaces/${uid}/${currentWorkspaceId}`));
-            logActivity(`Removed member ${uid} from workspace`);
+        // RULE 2: PROJECT SHARES WITH CLOUDINARY UPLOAD PROGRESS INDICATOR
+        window.triggerProjectFileUpload = () => {
+            document.getElementById('project-file-input').click();
         };
 
-        // PROJECT SHARES
-        window.triggerProjectFileUpload = () => document.getElementById('project-file-input').click();
+        window.uploadProjectFile = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
 
-        window.uploadProjectFile = async (input) => {
-            const file = input.files[0];
-            if(!file) return;
+            const progressContainer = document.getElementById('project-upload-progress');
+            const pctText = document.getElementById('project-upload-pct');
+            const pctBar = document.getElementById('project-upload-bar');
 
-            if(file.size > 100 * 1024 * 1024) return showToast("File limit exceeded (Max 100MB).", "error");
+            progressContainer.classList.remove('hidden');
+            pctBar.style.width = '0%';
+            pctText.innerText = '0%';
 
-            showToast("Uploading project share...");
-            const fileUrl = await uploadToCloudinary(file);
-            
-            const shareRef = push(ref(db, `workspaces/${currentWorkspaceId}/projects`));
-            await set(shareRef, {
-                fileName: file.name,
-                fileUrl: fileUrl,
-                sharedBy: userData.displayName,
-                timestamp: Date.now()
-            });
+            try {
+                const url = await uploadToCloudinaryWithProgress(file, 100, (percent) => {
+                    pctBar.style.width = `${percent}%`;
+                    pctText.innerText = `${percent}%`;
+                });
 
-            logActivity(`Shared project file: ${file.name}`);
-            showToast("Project file shared successfully!");
+                const shareRef = push(ref(db, `workspaces/${activeWorkspaceId}/projectShares`));
+                await set(shareRef, {
+                    fileName: file.name,
+                    fileUrl: url,
+                    sharedBy: currentUserData.displayName,
+                    timestamp: Date.now()
+                });
+
+                addActivityLog(`Shared project file: ${file.name}`);
+                showToast("Project file uploaded successfully to Cloudinary!");
+            } catch (err) {
+                showToast("Upload failed: " + err.message, "error");
+            } finally {
+                progressContainer.classList.add('hidden');
+                e.target.value = '';
+            }
         };
 
         function renderProjectShares() {
-            const container = document.getElementById('project-shares-container');
+            const shares = activeWorkspaceData.projectShares || {};
+            const container = document.getElementById('project-shares-list');
             container.innerHTML = '';
-            const projects = currentWorkspaceData.projects || {};
 
-            Object.keys(projects).forEach(pid => {
-                const p = projects[pid];
+            Object.values(shares).forEach(s => {
                 const div = document.createElement('div');
-                div.className = 'list-item';
+                div.style.cssText = "display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border); padding:10px; border-radius:8px; margin-bottom:8px; background:var(--bg);";
                 div.innerHTML = `
                     <div>
-                        <a href="${p.fileUrl}" target="_blank" style="color: var(--primary); font-weight: 600;"><i class="fas fa-file-download"></i> ${p.fileName}</a>
-                        <div style="font-size: 0.75rem; color: var(--text-muted);">Shared by: ${p.sharedBy}</div>
+                        <a href="${s.fileUrl}" target="_blank" style="color:var(--primary); font-weight:600; text-decoration:none;"><i class="fas fa-file"></i> ${s.fileName}</a>
+                        <div style="font-size:0.75rem; color:var(--text-muted);">Shared by: ${s.sharedBy}</div>
+                    </div>
+                    <a href="${s.fileUrl}" target="_blank" class="btn btn-secondary" style="padding:4px 10px; font-size:0.8rem;"><i class="fas fa-download"></i> Download</a>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // RULE 3: IN-APP "CREATE PROJECT FILE" CODE SYSTEM & REALTIME EDITING INDICATOR
+        window.submitCreateCodeFile = async () => {
+            const nameInput = document.getElementById('create-code-filename');
+            const name = nameInput.value.trim();
+            if (!name) return showToast("Enter a valid file name", "error");
+
+            const fileRef = push(ref(db, `workspaces/${activeWorkspaceId}/codeFiles`));
+            await set(fileRef, {
+                id: fileRef.key,
+                name: name,
+                content: "",
+                createdBy: currentUserData.displayName,
+                updatedAt: Date.now()
+            });
+
+            addActivityLog(`Created project file: ${name}`);
+            showToast("Project file created!");
+            nameInput.value = '';
+            closeDrawer('create-code-file-drawer');
+        };
+
+        function renderCodeFiles() {
+            const files = activeWorkspaceData.codeFiles || {};
+            const container = document.getElementById('project-code-files-list');
+            container.innerHTML = '';
+
+            if (Object.keys(files).length === 0) {
+                container.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem;">No project files created yet.</div>`;
+                return;
+            }
+
+            Object.entries(files).forEach(([fId, f]) => {
+                const activeEditors = f.editors ? Object.values(f.editors) : [];
+                const isBeingEdited = activeEditors.length > 0;
+
+                const div = document.createElement('div');
+                div.style.cssText = "border:1px solid var(--border); padding:12px; border-radius:8px; margin-bottom:10px; background:var(--bg); display:flex; flex-direction:column; gap:8px;";
+                
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <i class="fas fa-file-code" style="color:var(--primary);"></i>
+                            <strong style="font-size:0.95rem;">${f.name}</strong>
+                            ${isBeingEdited ? `<span style="font-size:0.75rem; background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:12px; font-weight:bold; display:inline-flex; align-items:center; gap:4px;"><i class="fas fa-circle" style="font-size:0.5rem;"></i> Being edited live by ${activeEditors.map(e => e.name).join(', ')}</span>` : ''}
+                        </div>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">Created by ${f.createdBy || 'Member'}</span>
+                    </div>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+                        <button class="btn btn-primary" style="padding:5px 10px; font-size:0.8rem; width:auto;" onclick="openCodeEditor('${fId}')"><i class="fas fa-code"></i> Start coding</button>
+                        <button class="btn btn-secondary" style="padding:5px 10px; font-size:0.8rem; width:auto;" onclick="openViewFileModal('${fId}')"><i class="fas fa-eye"></i> View file contents</button>
+                        <button class="btn btn-secondary" style="padding:5px 10px; font-size:0.8rem; width:auto;" onclick="editCodeFileName('${fId}', '${f.name}')"><i class="fas fa-pen"></i> Edit Name</button>
+                        <button class="btn btn-secondary" style="padding:5px 10px; font-size:0.8rem; width:auto;" onclick="downloadCodeFile('${fId}')"><i class="fas fa-download"></i> Download</button>
+                        <button class="btn btn-danger" style="padding:5px 10px; font-size:0.8rem; width:auto;" onclick="deleteCodeFile('${fId}')"><i class="fas fa-trash"></i> Delete</button>
                     </div>
                 `;
                 container.appendChild(div);
             });
         }
 
+        window.editCodeFileName = async (fileId, currentName) => {
+            const newName = prompt("Enter new file name:", currentName);
+            if (!newName || !newName.trim()) return;
+            await update(ref(db, `workspaces/${activeWorkspaceId}/codeFiles/${fileId}`), {
+                name: newName.trim()
+            });
+            addActivityLog(`Renamed project file to ${newName.trim()}`);
+            showToast("File name updated!");
+        };
+
+        window.openCodeEditor = async (fileId) => {
+            currentEditingFileId = fileId;
+            const fileSnap = await get(child(ref(db), `workspaces/${activeWorkspaceId}/codeFiles/${fileId}`));
+            if (!fileSnap.exists()) return showToast("File not found", "error");
+
+            const file = fileSnap.val();
+            document.getElementById('code-editor-title').innerText = `Start Coding: ${file.name}`;
+            document.getElementById('code-editor-content').value = file.content || '';
+            updateEditorLineCount();
+
+            // Register live editor presence
+            const editorPresenceRef = ref(db, `workspaces/${activeWorkspaceId}/codeFiles/${fileId}/editors/${currentUserData.uid}`);
+            await set(editorPresenceRef, { name: currentUserData.displayName, timestamp: Date.now() });
+            onDisconnect(editorPresenceRef).remove();
+
+            openDrawer('code-editor-drawer');
+        };
+
+        window.updateEditorLineCount = () => {
+            const text = document.getElementById('code-editor-content').value;
+            const lines = text.split('\n').length;
+            document.getElementById('code-editor-lines').innerText = `Lines: ${lines.toLocaleString()} / 50,000,000`;
+        };
+
+        window.saveCodeFileContent = async () => {
+            if (!currentEditingFileId) return;
+            const content = document.getElementById('code-editor-content').value;
+            const lines = content.split('\n').length;
+
+            if (lines > 50000000) {
+                return showToast("Exceeds maximum limit of 50 million lines of code", "error");
+            }
+
+            await update(ref(db, `workspaces/${activeWorkspaceId}/codeFiles/${currentEditingFileId}`), {
+                content: content,
+                updatedAt: Date.now(),
+                lastEditedBy: currentUserData.displayName
+            });
+
+            addActivityLog(`Saved updates to code file`);
+            showToast("File code saved!");
+        };
+
+        window.closeCodeEditorDrawer = async () => {
+            if (currentEditingFileId) {
+                await remove(ref(db, `workspaces/${activeWorkspaceId}/codeFiles/${currentEditingFileId}/editors/${currentUserData.uid}`));
+                currentEditingFileId = null;
+            }
+            closeDrawer('code-editor-drawer');
+        };
+
+        window.openViewFileModal = (fileId) => {
+            currentViewingFileId = fileId;
+            document.getElementById('view-file-modal').classList.remove('hidden');
+
+            const fileRef = ref(db, `workspaces/${activeWorkspaceId}/codeFiles/${fileId}`);
+            viewFileListenerUnsub = onValue(fileRef, (snap) => {
+                if (!snap.exists()) {
+                    closeViewFileModal();
+                    return;
+                }
+                const file = snap.val();
+                document.getElementById('view-file-title').innerText = `Viewing: ${file.name}`;
+                document.getElementById('view-file-content-pre').innerText = file.content || '/* Empty File */';
+
+                const editors = file.editors ? Object.values(file.editors) : [];
+                const indicator = document.getElementById('view-file-live-indicator');
+                if (editors.length > 0) {
+                    indicator.innerText = `● Live Editing in progress by: ${editors.map(e => e.name).join(', ')}`;
+                } else {
+                    indicator.innerText = ``;
+                }
+            });
+        };
+
+        window.closeViewFileModal = () => {
+            if (viewFileListenerUnsub) {
+                viewFileListenerUnsub();
+                viewFileListenerUnsub = null;
+            }
+            currentViewingFileId = null;
+            document.getElementById('view-file-modal').classList.add('hidden');
+        };
+
+        window.downloadCodeFile = async (fileId) => {
+            const fileSnap = await get(child(ref(db), `workspaces/${activeWorkspaceId}/codeFiles/${fileId}`));
+            if (!fileSnap.exists()) return;
+            const file = fileSnap.val();
+
+            const blob = new Blob([file.content || ''], { type: 'text/plain;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = file.name || 'code.txt';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        };
+
+        window.deleteCodeFile = async (fileId) => {
+            if (!confirm("Are you sure you want to delete this code file?")) return;
+            await remove(ref(db, `workspaces/${activeWorkspaceId}/codeFiles/${fileId}`));
+            addActivityLog(`Deleted a project code file`);
+            showToast("File deleted.");
+        };
+
         // ACTIVITY LOGS
-        function logActivity(action) {
-            if(!currentWorkspaceId) return;
-            const logRef = push(ref(db, `workspaces/${currentWorkspaceId}/activityLogs`));
-            set(logRef, {
+        async function addActivityLog(action) {
+            if(!activeWorkspaceId) return;
+            const logRef = push(ref(db, `workspaces/${activeWorkspaceId}/activityLogs`));
+            await set(logRef, {
                 action: action,
-                by: userData.displayName,
+                user: currentUserData.displayName,
                 timestamp: Date.now()
             });
         }
 
         function renderActivityLogs() {
-            const container = document.getElementById('activity-logs-container');
+            const logs = activeWorkspaceData.activityLogs || {};
+            const container = document.getElementById('activity-logs-list');
             container.innerHTML = '';
-            const logs = currentWorkspaceData.activityLogs || {};
 
-            Object.keys(logs).reverse().forEach(lid => {
-                const l = logs[lid];
+            Object.values(logs).reverse().forEach(l => {
+                const date = new Date(l.timestamp).toLocaleString();
                 const div = document.createElement('div');
-                div.style.padding = '4px 0';
-                div.style.borderBottom = '1px dashed var(--border-color)';
-                div.innerHTML = `<span style="color: var(--text-muted);">[${new Date(l.timestamp).toLocaleString()}]</span> <strong>${l.by}</strong>: ${l.action}`;
+                div.innerHTML = `<span style="color:var(--text-muted);">[${date}]</span> <strong>${l.user}</strong>: ${l.action}`;
                 container.appendChild(div);
             });
         }
@@ -1401,149 +1698,84 @@
         window.submitBugReport = async () => {
             const title = document.getElementById('bug-title-input').value.trim();
             const desc = document.getElementById('bug-desc-input').value.trim();
-            const file = document.getElementById('bug-evidence-input').files[0];
+            const file = document.getElementById('bug-file-input').files[0];
 
-            if(!title || !desc) return showToast("Title and Description required", "error");
-            if(file && file.size > 10 * 1024 * 1024) return showToast("Evidence file max size is 10MB", "error");
+            if (!title || !desc) return showToast("Enter bug title and description", "error");
 
-            let evidenceUrl = "";
-            if(file) evidenceUrl = await uploadToCloudinary(file);
+            let evidenceUrl = '';
+            if (file) {
+                evidenceUrl = await uploadToCloudinary(file, 10);
+            }
 
-            const bugRef = push(ref(db, `workspaces/${currentWorkspaceId}/bugs`));
+            const bugRef = push(ref(db, `workspaces/${activeWorkspaceId}/bugLogs`));
             await set(bugRef, {
                 title: title,
-                desc: desc,
+                description: desc,
                 evidence: evidenceUrl,
                 fixed: false,
-                reportedBy: userData.displayName
+                reportedBy: currentUserData.displayName
             });
 
-            closeAllDrawers();
-            showToast("Bug report recorded.");
-            logActivity(`Created bug report: ${title}`);
+            addActivityLog(`Filed bug report: ${title}`);
+            showToast("Bug report submitted!");
+            closeDrawer('create-bug-drawer');
         };
 
         function renderBugLogs() {
-            const container = document.getElementById('bug-logs-container');
+            const bugs = activeWorkspaceData.bugLogs || {};
+            const container = document.getElementById('bug-logs-list');
             container.innerHTML = '';
-            const bugs = currentWorkspaceData.bugs || {};
 
-            Object.keys(bugs).forEach(bid => {
-                const b = bugs[bid];
+            Object.entries(bugs).forEach(([key, b]) => {
                 const div = document.createElement('div');
-                div.className = 'list-item';
+                div.style.cssText = "border:1px solid var(--border); padding:12px; border-radius:8px; margin-bottom:10px; background:var(--bg);";
                 div.innerHTML = `
-                    <div>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <input type="checkbox" ${b.fixed ? 'checked' : ''} onchange="toggleBugFixed('${bid}', this.checked)">
-                            <strong style="${b.fixed ? 'text-decoration: line-through;' : ''}">${b.title}</strong>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong>${b.title}</strong>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <input type="checkbox" ${b.fixed ? 'checked' : ''} onchange="toggleBugFixed('${key}', this.checked)">
+                            <label style="font-size:0.8rem;">Mark as fixed</label>
                         </div>
-                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">${b.desc}</p>
-                        ${b.evidence ? `<a href="${b.evidence}" target="_blank" style="font-size:0.75rem; color:var(--primary);"><i class="fas fa-paperclip"></i> View Evidence</a>` : ''}
                     </div>
+                    <p style="font-size:0.85rem; color:var(--text-muted); margin-top:5px;">${b.description}</p>
+                    ${b.evidence ? `<a href="${b.evidence}" target="_blank" style="font-size:0.8rem; color:var(--primary);"><i class="fas fa-paperclip"></i> View Evidence</a>` : ''}
                 `;
                 container.appendChild(div);
             });
         }
 
-        window.toggleBugFixed = async (bid, fixed) => {
-            await update(ref(db, `workspaces/${currentWorkspaceId}/bugs/${bid}`), { fixed: fixed });
-            logActivity(`Updated bug fix state`);
+        window.toggleBugFixed = async (bugKey, status) => {
+            await update(ref(db, `workspaces/${activeWorkspaceId}/bugLogs/${bugKey}`), { fixed: status });
         };
 
-        // TEAM COMMUNICATIONS
-        function listenTeamChat() {
-            onValue(ref(db, `workspaces/${currentWorkspaceId}/chat`), (snap) => {
-                const box = document.getElementById('team-chat-box');
-                box.innerHTML = '';
-                if(!snap.exists()) return;
-
-                snap.forEach((childSnap) => {
-                    const msg = childSnap.val();
-                    const isPrem = msg.isPremium;
-
-                    const div = document.createElement('div');
-                    div.className = 'chat-msg';
-                    div.innerHTML = `
-                        <img class="avatar" src="${msg.photoURL || 'https://via.placeholder.com/36'}">
-                        <div>
-                            <div style="font-size: 0.8rem; font-weight: 600;">
-                                ${msg.senderName} 
-                                ${isPrem ? '<span class="premium-badge"><i class="fas fa-crown"></i> PRO</span>' : ''}
-                            </div>
-                            <div class="msg-content">
-                                ${formatMessageContent(msg.text)}
-                                ${msg.fileUrl ? `<div style="margin-top:5px;"><a href="${msg.fileUrl}" target="_blank" style="color:var(--primary); font-size:0.8rem;"><i class="fas fa-file"></i> Attachment</a></div>` : ''}
-                                ${msg.audioUrl ? `<audio controls src="${msg.audioUrl}" style="margin-top:5px; max-width: 200px; height: 30px;"></audio>` : ''}
-                            </div>
-                        </div>
-                    `;
-                    box.appendChild(div);
-                });
-                box.scrollTop = box.scrollHeight;
-            });
-        }
-
-        function formatMessageContent(text) {
-            if(!text) return '';
-            return text.replace(/@(\w+)/g, '<span class="mention-highlight">@$1</span>');
-        }
-
-        window.handleChatTyping = async (input) => {
-            const val = input.value;
-            const dropdown = document.getElementById('mention-dropdown');
-            
-            if(val.endsWith('@')) {
-                dropdown.classList.remove('hidden');
-                dropdown.innerHTML = '';
-                const members = currentWorkspaceData.members || {};
-                
-                for(let uid of Object.keys(members)) {
-                    const uSnap = await get(ref(db, `users/${uid}`));
-                    if(uSnap.exists()) {
-                        const mUser = uSnap.val();
-                        const item = document.createElement('div');
-                        item.className = 'list-item';
-                        item.style.cursor = 'pointer';
-                        item.innerText = mUser.displayName;
-                        item.onclick = () => {
-                            input.value = val + mUser.displayName + ' ';
-                            dropdown.classList.add('hidden');
-                        };
-                        dropdown.appendChild(item);
-                    }
-                }
-            } else if(!val.includes('@')) {
-                dropdown.classList.add('hidden');
-            }
-        };
-
+        // TEAM COMMUNICATIONS & MENTIONS
         window.sendChatMessage = async () => {
             const input = document.getElementById('chat-msg-input');
             const text = input.value.trim();
             if(!text) return;
 
-            const chatRef = push(ref(db, `workspaces/${currentWorkspaceId}/chat`));
-            await set(chatRef, {
-                senderUid: currentUser.uid,
-                senderName: userData.displayName,
-                photoURL: userData.photoURL || '',
-                isPremium: checkIsPremium(),
+            const msgRef = push(ref(db, `workspaces/${activeWorkspaceId}/chat`));
+            await set(msgRef, {
                 text: text,
+                senderUid: currentUserData.uid,
+                senderName: currentUserData.displayName,
+                senderPhoto: currentUserData.photoURL || '',
+                isPremium: currentUserData.isPremium || false,
                 timestamp: Date.now()
             });
 
-            // Detect mentions
-            const members = currentWorkspaceData.members || {};
-            for(let uid of Object.keys(members)) {
-                if(uid !== currentUser.uid) {
-                    const uSnap = await get(ref(db, `users/${uid}`));
-                    if(uSnap.exists() && text.includes(`@${uSnap.val().displayName}`)) {
-                        await push(ref(db, `notifications/${uid}`), {
-                            text: `You got mentioned by ${userData.displayName} in the workspace ${currentWorkspaceData.name}`,
-                            read: false,
-                            timestamp: Date.now()
-                        });
+            if (text.includes('@')) {
+                const members = activeWorkspaceData.members;
+                for (let uid of Object.keys(members)) {
+                    const uSnap = await get(child(ref(db), `users/${uid}`));
+                    if (uSnap.exists()) {
+                        const name = uSnap.val().displayName;
+                        if (name && text.includes(`@${name}`)) {
+                            await push(ref(db, `notifications/${uid}`), {
+                                text: `You got mentioned by ${currentUserData.displayName} in the workspace ${activeWorkspaceData.name}`,
+                                timestamp: Date.now()
+                            });
+                        }
                     }
                 }
             }
@@ -1552,230 +1784,344 @@
             document.getElementById('mention-dropdown').classList.add('hidden');
         };
 
-        window.uploadChatFile = async (input) => {
-            const file = input.files[0];
-            if(!file) return;
+        window.uploadChatAttachment = async (e, type) => {
+            const file = e.target.files[0];
+            if (!file) return;
 
-            showToast("Uploading attachment...");
-            const fileUrl = await uploadToCloudinary(file);
+            showToast("Uploading media...");
+            const url = await uploadToCloudinary(file, 100);
 
-            const chatRef = push(ref(db, `workspaces/${currentWorkspaceId}/chat`));
-            await set(chatRef, {
-                senderUid: currentUser.uid,
-                senderName: userData.displayName,
-                photoURL: userData.photoURL || '',
-                isPremium: checkIsPremium(),
-                text: `Shared file: ${file.name}`,
-                fileUrl: fileUrl,
+            const msgRef = push(ref(db, `workspaces/${activeWorkspaceId}/chat`));
+            await set(msgRef, {
+                text: type === 'image' ? `[Image Attachment]` : `[File Attachment: ${file.name}]`,
+                mediaUrl: url,
+                mediaType: type,
+                senderUid: currentUserData.uid,
+                senderName: currentUserData.displayName,
+                senderPhoto: currentUserData.photoURL || '',
+                isPremium: currentUserData.isPremium || false,
                 timestamp: Date.now()
             });
         };
 
-        window.toggleVoiceRecording = async () => {
+        function renderTeamChat() {
+            const chat = activeWorkspaceData.chat || {};
+            const box = document.getElementById('team-chat-box');
+            box.innerHTML = '';
+
+            Object.values(chat).forEach(m => {
+                const div = document.createElement('div');
+                div.className = 'chat-msg';
+                div.innerHTML = `
+                    ${m.senderPhoto ? `<img src="${m.senderPhoto}" class="chat-msg-avatar">` : `<div class="chat-msg-avatar" style="background:#cbd5e1;display:flex;align-items:center;justify-content:center;font-weight:bold;">${m.senderName.charAt(0)}</div>`}
+                    <div class="chat-msg-content">
+                        <div style="font-weight:700; font-size:0.8rem; display:flex; align-items:center; gap:5px;">
+                            ${m.senderName}
+                            ${m.isPremium ? `<span class="premium-badge"><i class="fas fa-crown"></i> PRO</span>` : ''}
+                        </div>
+                        <div>${m.text}</div>
+                        ${m.mediaType === 'image' ? `<img src="${m.mediaUrl}" style="max-width:200px; border-radius:8px; margin-top:5px;">` : ''}
+                        ${m.mediaType === 'audio' ? `<audio controls src="${m.mediaUrl}" style="margin-top:5px; height:32px;"></audio>` : ''}
+                        ${m.mediaType === 'file' ? `<a href="${m.mediaUrl}" target="_blank" style="color:var(--primary); text-decoration:none;"><i class="fas fa-file-download"></i> Download File</a>` : ''}
+                    </div>
+                `;
+                box.appendChild(div);
+            });
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // MENTION SUGGESTIONS
+        window.handleChatTyping = async (e) => {
+            const text = e.target.value;
+            const dropdown = document.getElementById('mention-dropdown');
+            const lastAt = text.lastIndexOf('@');
+
+            if (lastAt !== -1 && (lastAt === 0 || text[lastAt - 1] === ' ')) {
+                const query = text.substring(lastAt + 1).toLowerCase();
+                const members = activeWorkspaceData.members || {};
+                dropdown.innerHTML = '';
+
+                for (let uid of Object.keys(members)) {
+                    const uSnap = await get(child(ref(db), `users/${uid}`));
+                    if (uSnap.exists()) {
+                        const name = uSnap.val().displayName;
+                        if (name && name.toLowerCase().includes(query)) {
+                            const item = document.createElement('div');
+                            item.className = 'mention-item';
+                            item.innerText = `@${name}`;
+                            item.onclick = () => {
+                                e.target.value = text.substring(0, lastAt) + `@${name} `;
+                                dropdown.classList.add('hidden');
+                            };
+                            dropdown.appendChild(item);
+                        }
+                    }
+                }
+                dropdown.classList.remove('hidden');
+            } else {
+                dropdown.classList.add('hidden');
+            }
+        };
+
+        // VOICE NOTES & CAMERA CAPTURE
+        window.toggleVoiceRecord = async () => {
             const btn = document.getElementById('voice-record-btn');
-            if(!isRecording) {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                btn.style.color = '';
+            } else {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
                 audioChunks = [];
                 mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
                 mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const file = new File([audioBlob], "voice_note.webm", { type: 'audio/webm' });
-                    showToast("Sending voice note...");
-                    const audioUrl = await uploadToCloudinary(file);
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const file = new File([blob], "voicenote.webm");
+                    showToast("Uploading voice note...");
+                    const url = await uploadToCloudinary(file, 10);
                     
-                    const chatRef = push(ref(db, `workspaces/${currentWorkspaceId}/chat`));
-                    await set(chatRef, {
-                        senderUid: currentUser.uid,
-                        senderName: userData.displayName,
-                        photoURL: userData.photoURL || '',
-                        isPremium: checkIsPremium(),
-                        audioUrl: audioUrl,
+                    const msgRef = push(ref(db, `workspaces/${activeWorkspaceId}/chat`));
+                    await set(msgRef, {
+                        text: `[Voice Note]`,
+                        mediaUrl: url,
+                        mediaType: 'audio',
+                        senderUid: currentUserData.uid,
+                        senderName: currentUserData.displayName,
+                        senderPhoto: currentUserData.photoURL || '',
+                        isPremium: currentUserData.isPremium || false,
                         timestamp: Date.now()
                     });
                 };
                 mediaRecorder.start();
-                isRecording = true;
-                btn.style.background = 'var(--error)';
-                btn.style.color = 'white';
-            } else {
-                mediaRecorder.stop();
-                isRecording = false;
-                btn.style.background = 'var(--border-color)';
-                btn.style.color = 'var(--text-main)';
+                btn.style.color = 'var(--error)';
             }
         };
 
-        window.triggerCameraCapture = () => document.getElementById('chat-camera-input').click();
+        window.captureCameraMedia = async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.play();
 
-        function listenMentionNotifications() {
-            onValue(ref(db, `notifications/${currentUser.uid}`), (snap) => {
-                if(!snap.exists()) return;
-                snap.forEach((childSnap) => {
-                    const notif = childSnap.val();
-                    if(!notif.read) {
-                        showToast(notif.text, "info");
-                        update(ref(db, `notifications/${currentUser.uid}/${childSnap.key}`), { read: true });
-                    }
+            if (confirm("Click OK to capture snapshot from camera.")) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 640; canvas.height = 480;
+                canvas.getContext('2d').drawImage(video, 0, 0, 640, 480);
+                stream.getTracks().forEach(track => track.stop());
+                
+                canvas.toBlob(async (blob) => {
+                    const file = new File([blob], "camera_capture.jpg");
+                    showToast("Uploading camera capture...");
+                    const url = await uploadToCloudinary(file, 10);
+                    const msgRef = push(ref(db, `workspaces/${activeWorkspaceId}/chat`));
+                    await set(msgRef, {
+                        text: `[Camera Snap]`,
+                        mediaUrl: url,
+                        mediaType: 'image',
+                        senderUid: currentUserData.uid,
+                        senderName: currentUserData.displayName,
+                        senderPhoto: currentUserData.photoURL || '',
+                        isPremium: currentUserData.isPremium || false,
+                        timestamp: Date.now()
+                    });
                 });
-            });
-        }
+            }
+        };
 
-        // INVITE LINK & QR CODE
-        window.generateQRModal = () => {
-            document.getElementById('qr-modal').classList.remove('hidden');
-            const qrContainer = document.getElementById('qrcode-container');
-            qrContainer.innerHTML = '';
-            new QRCode(qrContainer, {
-                text: `${window.location.origin}?pin=${currentWorkspaceData.pin}`,
+        // RULE 4: FIXED INVITE LINK & QR CODE GENERATION
+        window.openQrModal = () => {
+            const modal = document.getElementById('qr-modal');
+            modal.classList.remove('hidden');
+            const container = document.getElementById('qrcode-container');
+            container.innerHTML = '';
+            const inviteUrl = `${window.location.origin}${window.location.pathname}?joinPin=${activeWorkspaceData.pin}`;
+            new QRCode(container, {
+                text: inviteUrl,
                 width: 180,
                 height: 180
             });
         };
 
         window.copyInviteLink = () => {
-            const link = `${window.location.origin}?pin=${currentWorkspaceData.pin}`;
-            navigator.clipboard.writeText(link);
+            const inviteUrl = `${window.location.origin}${window.location.pathname}?joinPin=${activeWorkspaceData.pin}`;
+            navigator.clipboard.writeText(inviteUrl);
             showToast("Invite link copied to clipboard!");
         };
 
-        // FRIEND SYSTEM
-        window.submitFriendRequest = async () => {
-            const query = document.getElementById('add-friend-input').value.trim();
-            if(!query) return;
+        // REDEEM PREMIUM CODE
+        window.submitRedeemCode = async () => {
+            const code = document.getElementById('redeem-code-input').value.trim();
+            if(!code) return;
 
-            if(query === userData.friendCode || query === currentUser.uid) {
-                return showToast("Cannot send request to yourself", "error");
+            const codeRef = ref(db, `redeemCodes/${code}`);
+            const snap = await get(codeRef);
+
+            if (!snap.exists()) return showToast("Invalid redeem code", "error");
+            const data = snap.val();
+
+            if (data.used) return showToast("Redeem code already used", "error");
+            if (data.expiresAt && data.expiresAt < Date.now()) return showToast("Redeem code expired", "error");
+
+            const days = data.days || 30;
+            const newExpiry = Date.now() + (days * 86400000);
+
+            await update(ref(db, `users/${currentUserData.uid}`), {
+                isPremium: true,
+                premiumUntil: newExpiry
+            });
+            await update(codeRef, { used: true, usedBy: currentUserData.uid });
+
+            showToast(`Premium unlocked for ${days} days!`);
+            closeDrawer('redeem-drawer');
+        };
+
+        function checkPremiumExpiry() {
+            if (currentUserData.isPremium && currentUserData.premiumUntil) {
+                const remaining = currentUserData.premiumUntil - Date.now();
+                if (remaining <= 0) {
+                    update(ref(db, `users/${currentUserData.uid}`), {
+                        isPremium: false,
+                        premiumUntil: null
+                    });
+                    showToast("Premium plan expired.");
+                } else {
+                    const daysLeft = Math.ceil(remaining / 86400000);
+                    document.getElementById('plan-timer-display').innerText = `Premium Plan Active: ${daysLeft} days remaining`;
+                }
+            } else {
+                document.getElementById('plan-timer-display').innerText = "Free Tier";
+            }
+        }
+
+        // FRIENDS NETWORK SYSTEM
+        window.sendFriendRequest = async () => {
+            const input = document.getElementById('add-friend-code').value.trim();
+            if(!input) return;
+
+            if (input === currentUserData.friendCode || input === currentUserData.uid) {
+                return showToast("Cannot add yourself", "error");
             }
 
             let targetUid = null;
-            // Check code
-            const codeSnap = await get(ref(db, `friendCodes/${query}`));
-            if(codeSnap.exists()) {
-                targetUid = codeSnap.val();
+            if (input.length === 6) {
+                const snap = await get(child(ref(db), `friendCodes/${input}`));
+                if(snap.exists()) targetUid = snap.val();
             } else {
-                const uSnap = await get(ref(db, `users/${query}`));
-                if(uSnap.exists()) targetUid = query;
+                const snap = await get(child(ref(db), `users/${input}`));
+                if(snap.exists()) targetUid = input;
             }
 
-            if(!targetUid) return showToast("The user was not found in our database", "error");
+            if (!targetUid) return showToast("The user was not found in our database", "error");
 
-            await set(ref(db, `friendRequests/${targetUid}/${currentUser.uid}`), {
-                senderUid: currentUser.uid,
-                displayName: userData.displayName,
+            await set(ref(db, `friendRequests/${targetUid}/${currentUserData.uid}`), {
+                fromUid: currentUserData.uid,
+                fromName: currentUserData.displayName,
                 timestamp: Date.now()
             });
 
-            closeAllDrawers();
             showToast("Request sent.");
+            document.getElementById('add-friend-code').value = '';
         };
 
-        function loadFriendRequests() {
-            onValue(ref(db, `friendRequests/${currentUser.uid}`), (snap) => {
-                const list = document.getElementById('friend-requests-list');
-                const badge = document.getElementById('pending-count-badge');
-                list.innerHTML = '';
+        function initFriendsListeners() {
+            onValue(ref(db, `friendRequests/${currentUserData.uid}`), (snap) => {
+                const reqs = snap.val() || {};
+                const keys = Object.keys(reqs);
+                document.getElementById('pending-req-count').innerText = keys.length;
 
-                if(!snap.exists()) {
-                    document.getElementById('friend-requests-total').innerText = '0';
-                    badge.classList.add('hidden');
-                    return;
-                }
-
-                const count = Object.keys(snap.val()).length;
-                document.getElementById('friend-requests-total').innerText = count;
-                badge.innerText = count;
-                badge.classList.remove('hidden');
-
-                snap.forEach((childSnap) => {
-                    const req = childSnap.val();
-                    const div = document.createElement('div');
-                    div.className = 'list-item';
-                    div.innerHTML = `
-                        <span>${req.displayName}</span>
-                        <div style="display:flex; gap:5px;">
-                            <button class="btn btn-primary" style="padding:4px 8px; font-size:0.75rem;" onclick="acceptFriendRequest('${req.senderUid}')">Accept</button>
-                            <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="denyFriendRequest('${req.senderUid}')">Deny</button>
-                        </div>
-                    `;
-                    list.appendChild(div);
-                });
-            });
-        }
-
-        window.acceptFriendRequest = async (senderUid) => {
-            await set(ref(db, `friends/${currentUser.uid}/${senderUid}`), { status: 'active' });
-            await set(ref(db, `friends/${senderUid}/${currentUser.uid}`), { status: 'active' });
-            await remove(ref(db, `friendRequests/${currentUser.uid}/${senderUid}`));
-            showToast("Friend added!");
-        };
-
-        window.denyFriendRequest = async (senderUid) => {
-            await remove(ref(db, `friendRequests/${currentUser.uid}/${senderUid}`));
-        };
-
-        function loadFriendList() {
-            onValue(ref(db, `friends/${currentUser.uid}`), (snap) => {
-                const container = document.getElementById('friend-directory-list');
+                const container = document.getElementById('friend-requests-list');
                 container.innerHTML = '';
-                if(!snap.exists()) return;
-
-                snap.forEach(async (childSnap) => {
-                    const fUid = childSnap.key;
-                    const fState = childSnap.val();
-                    const uSnap = await get(ref(db, `users/${fUid}`));
-                    if(!uSnap.exists()) return;
-
-                    const fUser = uSnap.val();
-                    const isBlocked = fState.status === 'blocked';
-
+                Object.values(reqs).forEach(r => {
                     const div = document.createElement('div');
-                    div.className = 'list-item';
+                    div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:8px; border-radius:6px;";
                     div.innerHTML = `
-                        <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openDirectChat('${fUid}', '${fUser.displayName}')">
-                            <img class="avatar" src="${fUser.photoURL || 'https://via.placeholder.com/36'}">
-                            <span>${fUser.displayName} ${isBlocked ? '(Blocked)' : ''}</span>
-                        </div>
-                        <div style="display:flex; gap:4px;">
-                            <button class="btn btn-secondary" style="padding:2px 6px; font-size:0.7rem;" onclick="toggleBlockFriend('${fUid}', '${isBlocked}')">${isBlocked ? 'Unblock' : 'Block'}</button>
-                            <button class="btn btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="unfriendUser('${fUid}')">Unfriend</button>
-                            <button class="btn btn-secondary" style="padding:2px 6px; font-size:0.7rem;" onclick="openReportModal('${fUid}')">Report</button>
+                        <span style="font-size:0.85rem;">${r.fromName}</span>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn btn-success" style="padding:4px 8px; font-size:0.75rem;" onclick="acceptFriendRequest('${r.fromUid}')">Accept</button>
+                            <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="denyFriendRequest('${r.fromUid}')">Deny</button>
                         </div>
                     `;
                     container.appendChild(div);
                 });
             });
+
+            onValue(ref(db, `friends/${currentUserData.uid}`), async (snap) => {
+                const friends = snap.val() || {};
+                const container = document.getElementById('friend-list-container');
+                container.innerHTML = '';
+
+                for (let [fUid, info] of Object.entries(friends)) {
+                    const uSnap = await get(child(ref(db), `users/${fUid}`));
+                    if (!uSnap.exists()) continue;
+                    const u = uSnap.val();
+
+                    const div = document.createElement('div');
+                    div.style.cssText = "display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border); padding:10px; border-radius:8px; background:var(--bg);";
+                    div.innerHTML = `
+                        <div style="cursor:pointer;" onclick="openFriendChat('${fUid}', '${u.displayName}')">
+                            <strong style="font-size:0.9rem;">${u.displayName}</strong>
+                            <div style="font-size:0.75rem; color:var(--text-muted);">${info.blocked ? '[Blocked]' : 'Click to chat'}</div>
+                        </div>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="toggleBlockFriend('${fUid}', ${!info.blocked})">${info.blocked ? 'Unblock' : 'Block'}</button>
+                            <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="unfriend('${fUid}')">Unfriend</button>
+                            <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="openReportFriendModal('${fUid}')"><i class="fas fa-flag"></i></button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                }
+            });
+
+            onValue(ref(db, `notifications/${currentUserData.uid}`), (snap) => {
+                if(!snap.exists()) return;
+                Object.entries(snap.val()).forEach(([k, n]) => {
+                    showToast(n.text);
+                    remove(ref(db, `notifications/${currentUserData.uid}/${k}`));
+                });
+            });
         }
 
-        window.toggleBlockFriend = async (fUid, isBlockedStr) => {
-            const nextStatus = isBlockedStr === 'true' ? 'active' : 'blocked';
-            await update(ref(db, `friends/${currentUser.uid}/${fUid}`), { status: nextStatus });
+        window.acceptFriendRequest = async (targetUid) => {
+            await set(ref(db, `friends/${currentUserData.uid}/${targetUid}`), { joinedAt: Date.now(), blocked: false });
+            await set(ref(db, `friends/${targetUid}/${currentUserData.uid}`), { joinedAt: Date.now(), blocked: false });
+            await remove(ref(db, `friendRequests/${currentUserData.uid}/${targetUid}`));
+            showToast("Friend added!");
         };
 
-        window.unfriendUser = async (fUid) => {
-            await remove(ref(db, `friends/${currentUser.uid}/${fUid}`));
-            await remove(ref(db, `friends/${fUid}/${currentUser.uid}`));
-            showToast("Friend removed.");
+        window.denyFriendRequest = async (targetUid) => {
+            await remove(ref(db, `friendRequests/${currentUserData.uid}/${targetUid}`));
         };
 
-        window.openDirectChat = (fUid, name) => {
+        window.toggleBlockFriend = async (targetUid, status) => {
+            await update(ref(db, `friends/${currentUserData.uid}/${targetUid}`), { blocked: status });
+        };
+
+        window.unfriend = async (targetUid) => {
+            await remove(ref(db, `friends/${currentUserData.uid}/${targetUid}`));
+            await remove(ref(db, `friends/${targetUid}/${currentUserData.uid}`));
+            showToast("Unfriended user.");
+        };
+
+        // PRIVATE FRIEND CHAT
+        window.openFriendChat = (fUid, fName) => {
             activeFriendChatUid = fUid;
-            document.getElementById('friend-chat-title').innerText = `Chat with ${name}`;
-            openDrawer('friend-chat-drawer');
+            document.getElementById('friend-chat-title').innerText = `Chat with ${fName}`;
+            document.getElementById('friend-chat-modal').classList.remove('hidden');
 
-            const chatId = [currentUser.uid, fUid].sort().join('_');
+            const chatId = [currentUserData.uid, fUid].sort().join('_');
             onValue(ref(db, `directChats/${chatId}`), (snap) => {
                 const box = document.getElementById('friend-chat-box');
                 box.innerHTML = '';
                 if(!snap.exists()) return;
 
-                snap.forEach(c => {
-                    const m = c.val();
+                Object.values(snap.val()).forEach(m => {
                     const div = document.createElement('div');
                     div.className = 'chat-msg';
+                    div.style.alignSelf = m.senderUid === currentUserData.uid ? 'flex-end' : 'flex-start';
                     div.innerHTML = `
-                        <div class="msg-content">
-                            <strong>${m.senderName}:</strong> ${m.text}
+                        <div class="chat-msg-content">
+                            <div>${m.text}</div>
+                            ${m.mediaType === 'audio' ? `<audio controls src="${m.mediaUrl}" style="margin-top:5px; height:32px;"></audio>` : ''}
                         </div>
                     `;
                     box.appendChild(div);
@@ -1784,72 +2130,107 @@
             });
         };
 
-        window.sendFriendMessage = async () => {
+        window.closeFriendChatModal = () => {
+            document.getElementById('friend-chat-modal').classList.add('hidden');
+        };
+
+        window.sendFriendChatMessage = async () => {
             const input = document.getElementById('friend-chat-input');
             const text = input.value.trim();
-            if(!text || !activeFriendChatUid) return;
+            if(!text) return;
 
-            const chatId = [currentUser.uid, activeFriendChatUid].sort().join('_');
+            const chatId = [currentUserData.uid, activeFriendChatUid].sort().join('_');
             const msgRef = push(ref(db, `directChats/${chatId}`));
             await set(msgRef, {
-                senderUid: currentUser.uid,
-                senderName: userData.displayName,
                 text: text,
+                senderUid: currentUserData.uid,
                 timestamp: Date.now()
             });
-
             input.value = '';
         };
 
-        window.openReportModal = (fUid) => {
+        window.toggleFriendVoiceRecord = async () => {
+            if (friendMediaRecorder && friendMediaRecorder.state === 'recording') {
+                friendMediaRecorder.stop();
+            } else {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                friendMediaRecorder = new MediaRecorder(stream);
+                friendAudioChunks = [];
+                friendMediaRecorder.ondataavailable = e => friendAudioChunks.push(e.data);
+                friendMediaRecorder.onstop = async () => {
+                    const blob = new Blob(friendAudioChunks, { type: 'audio/webm' });
+                    const file = new File([blob], "direct_voicenote.webm");
+                    const url = await uploadToCloudinary(file, 10);
+                    
+                    const chatId = [currentUserData.uid, activeFriendChatUid].sort().join('_');
+                    const msgRef = push(ref(db, `directChats/${chatId}`));
+                    await set(msgRef, {
+                        text: `[Voice Note]`,
+                        mediaUrl: url,
+                        mediaType: 'audio',
+                        senderUid: currentUserData.uid,
+                        timestamp: Date.now()
+                    });
+                };
+                friendMediaRecorder.start();
+            }
+        };
+
+        // REPORT FRIEND
+        window.openReportFriendModal = (fUid) => {
             activeReportFriendUid = fUid;
-            document.getElementById('report-modal').classList.remove('hidden');
+            document.getElementById('report-friend-modal').classList.remove('hidden');
         };
 
         window.submitFriendReport = async () => {
             const cat = document.getElementById('report-category').value;
             const desc = document.getElementById('report-desc').value.trim();
-            const file = document.getElementById('report-evidence').files[0];
+            const file = document.getElementById('report-evidence-file').files[0];
 
-            let evidenceUrl = "";
-            if(file) evidenceUrl = await uploadToCloudinary(file);
+            let imgUrl = '';
+            if (file) {
+                imgUrl = await uploadToCloudinary(file, 10);
+            }
 
-            const rRef = push(ref(db, 'reports'));
-            await set(rRef, {
+            const repRef = push(ref(db, 'friendReports'));
+            await set(repRef, {
                 reportedUid: activeReportFriendUid,
-                reporterUid: currentUser.uid,
+                reporterUid: currentUserData.uid,
                 category: cat,
-                desc: desc,
-                evidence: evidenceUrl,
+                description: desc,
+                evidence: imgUrl,
                 timestamp: Date.now()
             });
 
-            document.getElementById('report-modal').classList.add('hidden');
-            showToast("Report submitted successfully!");
+            showToast("Report submitted successfully.");
+            closeModal('report-friend-modal');
         };
 
-        // PREMIUM REDEEM CODE
-        window.submitRedeemCode = async () => {
-            const code = document.getElementById('redeem-code-input').value.trim();
-            if(!code) return;
+        // PROFILE MODIFICATIONS
+        window.saveProfileChanges = async () => {
+            const name = document.getElementById('edit-display-name').value.trim();
+            const bio = document.getElementById('edit-bio').value.trim();
+            const file = document.getElementById('edit-avatar-input').files[0];
 
-            const codeSnap = await get(ref(db, `redeemCodes/${code}`));
-            if(!codeSnap.exists()) return showToast("Invalid redeem code", "error");
+            if (name.length < 3 || name.length > 10) {
+                return showToast("Display name must be 3-10 characters", "error");
+            }
 
-            const cData = codeSnap.val();
-            if(cData.used) return showToast("This code has already been used.", "error");
-            if(cData.expiresAt && cData.expiresAt < Date.now()) return showToast("This code has expired.", "error");
+            let photoUrl = currentUserData.photoURL;
+            if (file) {
+                const limit = currentUserData.isPremium ? 10 : 5;
+                photoUrl = await uploadToCloudinary(file, limit);
+            }
 
-            const durationMs = cData.days * 86400000;
-            const newExpiry = (userData.premiumUntil && userData.premiumUntil > Date.now() ? userData.premiumUntil : Date.now()) + durationMs;
+            await update(ref(db, `users/${currentUserData.uid}`), {
+                displayName: name,
+                bio: bio,
+                photoURL: photoUrl
+            });
 
-            await update(ref(db, `users/${currentUser.uid}`), { premiumUntil: newExpiry });
-            await update(ref(db, `redeemCodes/${code}`), { used: true, usedBy: currentUser.uid });
-
-            closeAllDrawers();
-            showToast(`Premium activated for ${cData.days} days!`);
+            showToast("Profile details saved!");
+            closeDrawer('my-profile-drawer');
         };
-
     </script>
 </body>
 </html>
